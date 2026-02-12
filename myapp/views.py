@@ -35,5 +35,8 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     return render(request, "myapp/profile.html")
-
+ 
+@login_required
+def dashboard_view(request):
+    return render(request, 'myapp/dashboard.html')
     
