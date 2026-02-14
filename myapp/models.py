@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+
+deadline = models.DateTimeField(default=timezone.now)
 
 class Profile(models.Model):
     ROLE_CHOICES = (
@@ -60,7 +63,7 @@ class Submission(models.Model):
     def __str__(self):
         return f"{self.student.username} - {self.post.title}"
 
-class course(models.Model):
+class Course(models.Model):
     name = models.CharField(max_length=200)
     lecturer = models.ForeignKey(User,on_delete=models.CASCADE)
 
