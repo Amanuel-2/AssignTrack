@@ -34,7 +34,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     group_type = models.CharField(max_length=20, choices=GROUP_TYPE_CHOICES, default='individual')
-    max_student_per_group = models.IntegerField(null=True,blank=True)
+    max_students_per_group = models.IntegerField(null=True,blank=True)
 
     def __str__(self):
         return self.title

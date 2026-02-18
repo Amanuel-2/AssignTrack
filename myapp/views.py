@@ -117,6 +117,4 @@ class JoinGroupView(APIView):
         group.members.add(request.user)
 
         return Response({"message": "Joined successfully"})
-        print(request.user)
-        print(request.user.is_authenticated)
-        print(request.user.profile.role)
+        

@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('attachment', models.FileField(blank=True, null=True, upload_to='assignments/')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('group_type', models.CharField(choices=[('individual', 'Individual'), ('manual', 'Manual Group'), ('automatic', 'Automatic Group')], default='individual', max_length=20)),
-                ('max_student_per_group', models.IntegerField(blank=True, null=True)),
+                ('max_students_per_group', models.IntegerField(blank=True, null=True)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
