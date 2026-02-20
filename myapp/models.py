@@ -37,6 +37,27 @@ class Post(models.Model):
     def __str__(self):
         return self.title
     
+    @property
+    def is_overdue(self):
+        return self.deadline and timezone.now() > self.deadline
+
+    def get_status_for_user(self, user):
+        if not user.is_authenticated:
+            return "Unknown"
+
+        # check if user submitted
+        has_submitted = self.submissions.filter(student=user).exists()
+        
+        if has_submitted:
+            return "Submitted"
+        
+        if self.deadline and timezone.now()>self.deadline:
+            return "Overdue"
+        
+        return "Pending"
+    
+
+    
 
 class Group(models.Model): 
     post = models.ForeignKey(Post,on_delete=models.CASCADE,related_name="groups")

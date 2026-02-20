@@ -54,7 +54,10 @@ def profile_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, "myapp/dashboard.html")
+    posts = Post.objects.all()
+    for post in posts:
+        post.user_status = post.get_status_for_user(request.user)
+    return render(request, "myapp/dashboard.html", {"posts": posts})
 
 
 class PostCreateView(generics.ListCreateAPIView):
