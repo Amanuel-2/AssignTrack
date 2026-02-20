@@ -7,16 +7,18 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, SubmissionForm
 from .models import Group, Post, Submission
 from .permissions import IsLecturer, IsStudent
 from .serializers import JoinGroupChoiceSerializer, PostSerializer, SubmissionSerializer
 
+from django.http import JsonResponse
 
 def register_view(request):
     if request.method == "POST":
@@ -55,8 +57,19 @@ def profile_view(request):
 @login_required
 def dashboard_view(request):
     posts = Post.objects.all()
+    posts = Post.objects.all()
+   
     for post in posts:
         post.user_status = post.get_status_for_user(request.user)
+        try:
+            group = Group.objects.get(post=post, members=request.user)
+            post.user_group = group.name
+        except Group.DoesNotExist:
+            post.user_group = None
+        groups = Group.objects.filter(post=post)
+        total_submissions = Submission.objects.filter(post=post).count()
+        total_students = sum(group.members.count() for group in groups)
+        post.progress = f"{total_submissions}/{total_students}" if total_students else "0/0"
     return render(request, "myapp/dashboard.html", {"posts": posts})
 
 
@@ -166,3 +179,72 @@ class JoinGroupChoiceView(APIView):
         group = serializer.validated_data["group"]
         joiner = JoinGroupView()
         return joiner._join_group(request, group)
+
+
+
+@login_required
+def assignment_detail_view(request, post_id):
+    user = request.user
+    post = get_object_or_404(Post, id=post_id)
+
+    # Find the user's group for this post
+    group = Group.objects.filter(post=post, members=user).first()
+
+    if group is None:
+        # Optionally: show a message or redirect
+        return render(request, "myapp/assignment_detail.html", {
+            "post": post,
+            "error": "You are not in a group for this assignment."
+        })
+
+    # Get or create the submission object
+    submission, created = Submission.objects.get_or_create(
+        post=post,
+        student=user,
+        defaults={"group": group}
+    )
+    
+    groups = None
+    if post.group_type == "manual":
+        group = post.groups.all()
+
+    # Handle submission POST
+    if request.method == "POST":
+        form = SubmissionForm(request.POST, request.FILES, instance=submission)
+        if form.is_valid():
+            form.save()
+            return redirect("dashboard")
+    else:
+        form = SubmissionForm(instance=submission)
+
+    return render(request, "myapp/assignment_detail.html", {
+        "post": post,
+        "group": group,
+        "groups":groups,
+        "submission": submission,
+        "form":form,
+    })
+
+@login_required
+def join_group(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    post = group.post
+    user = request.user
+
+    # Only allow joining for manual groups
+    if post.group_type != "manual":
+        return JsonResponse({"error": "Joining not allowed for this assignment."}, status=400)
+
+    # Check if already in a group for this assignment
+    existing_group = Group.objects.filter(post=post, members=user).first()
+    if existing_group:
+        return JsonResponse({"error": "You are already in a group."}, status=400)
+
+    # Check group capacity
+    if post.max_students_per_group:
+        if group.members.count() >= post.max_students_per_group:
+            return JsonResponse({"error": "Group is full."}, status=400)
+
+    group.members.add(user)
+
+    return JsonResponse({"success": "Successfully joined group."})

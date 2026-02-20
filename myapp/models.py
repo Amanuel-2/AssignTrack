@@ -26,7 +26,7 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     deadline = models.DateTimeField(help_text="Submission deadline")
-
+    
     # Teacher attached file (assignment PDF, DOC, etc.)
     attachment = models.FileField(upload_to='assignments/',blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)

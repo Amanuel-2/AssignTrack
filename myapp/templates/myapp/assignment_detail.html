@@ -1,0 +1,78 @@
+<h2>{{ post.title }}</h2>
+
+<hr>
+
+<h3> Assignment Details</h3>
+<p><strong>Description:</strong></p>
+<p>{{ post.description }}</p>
+
+<p><strong>Due Date:</strong> {{ post.deadline }}</p>
+<p><strong>Total Marks:</strong> {{ post.created_at }}</p>
+
+{% if post.attachment %}
+<p>
+    <strong>Assignment File:</strong>
+    <a href="{{ post.file.url }}">Download</a>
+</p>
+{% endif %}
+
+<hr>
+
+<h3> Your Group</h3>
+
+{% if group %}
+<p><strong>Group Name:</strong> {{ group.name }}</p>
+
+<ul>
+    {% for member in group.members.all %}
+        <li>{{ member.username }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>You are not assigned to any group.</p>
+{% endif %}
+
+<hr>
+
+<h3> Submit Your Work</h3>
+
+{% if submission %}
+<p style="color:green;"><strong>Status:</strong> Submitted</p>
+<p>Submitted on: {{ submission.submitted_at }}</p>
+<a href="{{ submission.file.url }}">View Submission</a>
+{% else %}
+<p style="color:red;"><strong>Status:</strong> Not Submitted</p>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload Submission</button>
+</form>
+{% endif %}
+
+{% if post.group_type == "manual" %}
+
+<h3>Available Groups</h3>
+
+{% for g in groups %}
+    <div>
+        <p><strong>{{ g.name }}</strong></p>
+        <p>Members: {{ g.members.count }}</p>
+
+        {% if not group %}
+            <button onclick="joinGroup({{ g.id }})">Join Group</button>
+        {% endif %}
+    </div>
+{% endfor %}
+
+{% endif %}
+<script>
+function joinGroup(groupId) {
+    fetch(`/api/groups/${groupId}/join/`)
+    .then(response => response.json())
+    .then(data => {
+        alert(data.success || data.error);
+        location.reload();
+    });
+}
+</script>

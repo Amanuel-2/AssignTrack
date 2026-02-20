@@ -1,40 +1,13 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>Dashboard</h2>
+{% for post in posts %}
+<div class="assignment-card">
+    <h4>{{ post.title }}</h4>
+    <p>Deadline: {{ post.deadline|date:"M d, Y H:i" }}</p>
+    <p>Status: {{ post.user_status }}</p>
+    <p>Progress: {{ post.progress }}</p>
+    {% if post.user_group %}
+        <p>Group: {{ post.user_group }}</p>
+    {% endif %}
 
-{% if posts %}
-    {% for post in posts %}
-        <div class="assignment-card">
-            <h4>{{ post.title }}</h4>
-            <p>Deadline: {{ post.deadline|date:"M d, Y H:i" }}</p>
-
-            {% if post.user_status == "Submitted" %}
-                <span class="badge bg-success">{{ post.user_status }}</span>
-            {% elif post.user_status == "Overdue" %}
-                <span class="badge bg-danger">{{ post.user_status }}</span>
-            {% else %}
-                <span class="badge bg-warning text-dark">{{ post.user_status }}</span>
-            {% endif %}
-
-        </div>
-    {% endfor %}
-{% else %}
-    <p>No assignments available.</p>
-{% endif %}
-
-<style>
-.assignment-card {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    background: #f9f9f9;
-}
-.badge {
-    font-size: 0.9rem;
-    padding: 5px 10px;
-    font-weight: 500;
-}
-</style>
-
-{% endblock %}
+    <a href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+</div>
+{% endfor %}
