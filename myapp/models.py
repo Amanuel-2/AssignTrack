@@ -33,6 +33,13 @@ class Post(models.Model):
 
     group_type = models.CharField(max_length=20, choices=GROUP_TYPE_CHOICES, default='individual')
     max_students_per_group = models.IntegerField(null=True,blank=True)
+    course = models.ForeignKey(
+        "Course",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="posts",
+    )
 
     def __str__(self):
         return self.title

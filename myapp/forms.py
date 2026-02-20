@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Profile,Submission
+from .models import Post, Profile, Submission
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -35,3 +35,20 @@ class SubmissionForm(forms.ModelForm):
     class Meta:
         model = Submission
         fields = ['file']
+
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = [
+            "course",
+            "title",
+            "content",
+            "deadline",
+            "attachment",
+            "group_type",
+            "max_students_per_group",
+        ]
+        widgets = {
+            "deadline": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }

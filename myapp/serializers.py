@@ -14,6 +14,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = "__all__"
+        read_only_fields = ("author", "created_at")
 
     def validate(self, data):
         request = self.context.get('request')
@@ -50,6 +51,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context.get('request')
         post = data['post']
+        group = data.get("group")
 
         # Only students can submit
         if not request or not request.user.is_authenticated:
@@ -65,6 +67,17 @@ class SubmissionSerializer(serializers.ModelSerializer):
         # Check deadline
         if timezone.now() > post.deadline:
             raise serializers.ValidationError("Deadline has passed.")
+
+        if Submission.objects.filter(post=post, student=request.user).exists():
+            raise serializers.ValidationError("You already submitted this assignment.")
+
+        if post.group_type in ("manual", "automatic"):
+            if group is None:
+                raise serializers.ValidationError("A group is required for this assignment.")
+            if group.post_id != post.id:
+                raise serializers.ValidationError("Selected group does not belong to this assignment.")
+            if not group.members.filter(id=request.user.id).exists():
+                raise serializers.ValidationError("You must join your group before submitting.")
 
         return data
 

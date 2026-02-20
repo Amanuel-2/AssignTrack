@@ -1,78 +1,134 @@
-<h2>{{ post.title }}</h2>
+{% extends "base.html" %}
 
-<hr>
+{% block content %}
+<div class="assignment-card">
+    <h2>{{ post.title }}</h2>
+    <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
+    <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
+    <p><strong>Description:</strong></p>
+    <p>{{ post.content }}</p>
+    <p><strong>Deadline:</strong> {{ post.deadline }}</p>
+    <p><strong>Created At:</strong> {{ post.created_at }}</p>
 
-<h3> Assignment Details</h3>
-<p><strong>Description:</strong></p>
-<p>{{ post.description }}</p>
+    {% if post.attachment %}
+    <a href="{{ post.attachment.url }}" download class="btn btn-download">Download Assignment</a>
+    {% endif %}
+</div>
 
-<p><strong>Due Date:</strong> {{ post.deadline }}</p>
-<p><strong>Total Marks:</strong> {{ post.created_at }}</p>
-
-{% if post.attachment %}
-<p>
-    <strong>Assignment File:</strong>
-    <a href="{{ post.file.url }}">Download</a>
-</p>
-{% endif %}
-
-<hr>
-
-<h3> Your Group</h3>
-
-{% if group %}
-<p><strong>Group Name:</strong> {{ group.name }}</p>
-
-<ul>
-    {% for member in group.members.all %}
-        <li>{{ member.username }}</li>
-    {% endfor %}
-</ul>
-{% else %}
-<p>You are not assigned to any group.</p>
-{% endif %}
-
-<hr>
-
-<h3> Submit Your Work</h3>
-
-{% if submission %}
-<p style="color:green;"><strong>Status:</strong> Submitted</p>
-<p>Submitted on: {{ submission.submitted_at }}</p>
-<a href="{{ submission.file.url }}">View Submission</a>
-{% else %}
-<p style="color:red;"><strong>Status:</strong> Not Submitted</p>
-
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Upload Submission</button>
-</form>
-{% endif %}
+<div class="assignment-card">
+    <h3>Group Information</h3>
+    <p><strong>Group Type:</strong> {{ post.get_group_type_display }}</p>
+    {% if group %}
+    <p><strong>Your Group:</strong> {{ group.name }}</p>
+    {% else %}
+    <p><strong>Your Group:</strong> Not joined</p>
+    {% endif %}
+</div>
 
 {% if post.group_type == "manual" %}
+<div class="assignment-card">
+    <h3>Available Groups</h3>
+    <form id="csrf-form" style="display:none;">{% csrf_token %}</form>
 
-<h3>Available Groups</h3>
-
-{% for g in groups %}
-    <div>
+    {% for g in groups %}
+    <div id="group-{{ g.id }}" class="group-box">
         <p><strong>{{ g.name }}</strong></p>
-        <p>Members: {{ g.members.count }}</p>
+        <p>
+            Members:
+            <span id="count-{{ g.id }}">{{ g.members.count }}</span>
+            {% if post.max_students_per_group %}/ {{ post.max_students_per_group }}{% endif %}
+        </p>
 
-        {% if not group %}
-            <button onclick="joinGroup({{ g.id }})">Join Group</button>
+        {% if group and group.id == g.id %}
+        <span class="badge submitted">You are in this group</span>
+        {% elif post.max_students_per_group and g.members.count >= post.max_students_per_group %}
+        <button type="button" class="btn btn-disabled" disabled>Group Full</button>
+        {% elif not group %}
+        <button type="button" class="btn btn-primary" id="join-btn-{{ g.id }}" onclick="joinGroup({{ g.id }})">Join Group</button>
         {% endif %}
     </div>
-{% endfor %}
-
+    {% empty %}
+    <p>No groups available yet.</p>
+    {% endfor %}
+</div>
 {% endif %}
+
+<div class="assignment-card">
+    <h3>Submission</h3>
+    {% if submission %}
+    <p>
+        <strong>Status:</strong>
+        <span class="badge submitted">Submitted</span>
+    </p>
+    <p><strong>Submitted At:</strong> {{ submission.submitted_at }}</p>
+    <a href="{{ submission.file.url }}" download class="btn btn-download">Download Your Submission</a>
+    {% else %}
+    {% if post.is_overdue %}
+    <p><strong>Status:</strong> <span class="badge overdue">Overdue</span></p>
+    {% else %}
+    <p><strong>Status:</strong> <span class="badge pending">Pending</span></p>
+    {% endif %}
+
+    {% if submit_error %}
+    <p class="error-text">{{ submit_error }}</p>
+    {% endif %}
+
+    {% if can_submit %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-primary" type="submit">Upload Submission</button>
+    </form>
+    {% endif %}
+    {% endif %}
+</div>
+
 <script>
+function getCSRFToken() {
+    const tokenInput = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]');
+    return tokenInput ? tokenInput.value : '';
+}
+
+function disableJoinButtons() {
+    document.querySelectorAll("[id^='join-btn-']").forEach(btn => {
+        btn.disabled = true;
+    });
+}
+
 function joinGroup(groupId) {
-    fetch(`/api/groups/${groupId}/join/`)
+    const button = document.getElementById(`join-btn-${groupId}`);
+    if (button) {
+        button.disabled = true;
+    }
+
+    fetch(`/api/groups/${groupId}/join/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+        },
+    })
     .then(response => response.json())
     .then(data => {
-        alert(data.success || data.error);
-        location.reload();
+        if (data.success) {
+            const count = document.getElementById(`count-${groupId}`);
+            if (count && data.member_count !== undefined) {
+                count.innerText = data.member_count;
+            }
+            disableJoinButtons();
+            window.location.reload();
+            return;
+        }
+        if (button) {
+            button.disabled = false;
+        }
+        alert(data.error || "Unable to join group.");
+    })
+    .catch(() => {
+        if (button) {
+            button.disabled = false;
+        }
+        alert("Request failed. Please try again.");
     });
 }
 </script>
+{% endblock %}

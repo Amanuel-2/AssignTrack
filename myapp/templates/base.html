@@ -5,13 +5,15 @@
     <title>AssignTrack</title>
     <meta charset="UTF-8">
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'myapp/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 
 <body>
 
-    <nav>
+    <nav class="nav-bar">
         <a href="{% url 'profile' %}">Home</a> |
+        <a href="{% url 'dashboard' %}">Dashboard</a> |
 
         {% if user.is_authenticated %}
         <span>Welcome {{ user.username }}</span> |

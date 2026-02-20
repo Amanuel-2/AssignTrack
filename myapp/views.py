@@ -5,20 +5,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db.models import Case, IntegerField, Value, When
 
 from rest_framework import generics, permissions, status
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .forms import CustomUserCreationForm, SubmissionForm
+from .forms import CustomUserCreationForm, PostForm, SubmissionForm
 from .models import Group, Post, Submission
 from .permissions import IsLecturer, IsStudent
 from .serializers import JoinGroupChoiceSerializer, PostSerializer, SubmissionSerializer
-
-from django.http import JsonResponse
 
 def register_view(request):
     if request.method == "POST":
@@ -56,11 +57,24 @@ def profile_view(request):
 
 @login_required
 def dashboard_view(request):
-    posts = Post.objects.all()
-    posts = Post.objects.all()
-   
+    now = timezone.now()
+    posts = Post.objects.select_related("author", "course").annotate(
+        is_overdue_case=Case(
+            When(deadline__lt=now, then=Value(1)),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).order_by("is_overdue_case", "deadline")
+    user_role = (
+        (request.user.profile.role or "").strip().lower()
+        if hasattr(request.user, "profile")
+        else ""
+    )
+
     for post in posts:
         post.user_status = post.get_status_for_user(request.user)
+        post.status_class = post.user_status.lower()
+        post.can_manage = user_role == "lecturer" and post.author_id == request.user.id
         try:
             group = Group.objects.get(post=post, members=request.user)
             post.user_group = group.name
@@ -73,10 +87,21 @@ def dashboard_view(request):
     return render(request, "myapp/dashboard.html", {"posts": posts})
 
 
+def _is_lecturer(user):
+    if not user.is_authenticated or not hasattr(user, "profile"):
+        return False
+    return (user.profile.role or "").strip().lower() == "lecturer"
+
+
 class PostCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsLecturer]
+
+    def get_queryset(self):
+        if self.request.method in SAFE_METHODS:
+            return Post.objects.all()
+        return Post.objects.filter(author=self.request.user)
 
     def perform_create(self, serializer):
         post = serializer.save(author=self.request.user)
@@ -85,7 +110,10 @@ class PostCreateView(generics.ListCreateAPIView):
         if not post.max_students_per_group or post.max_students_per_group <= 0:
             return
 
-        students = User.objects.filter(profile__role="student")
+        students = User.objects.filter(
+            profile__role="student",
+            is_active=True,
+        ).distinct()
         total_students = students.count()
         if total_students == 0:
             return
@@ -104,6 +132,20 @@ class PostCreateView(generics.ListCreateAPIView):
                 groups[group_index].members.add(student)
                 if groups[group_index].members.count() >= post.max_students_per_group:
                     group_index += 1
+
+
+class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsLecturer]
+
+    def get_queryset(self):
+        if self.request.method in SAFE_METHODS:
+            return Post.objects.all()
+        return Post.objects.filter(author=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class SubmissionCreateView(generics.CreateAPIView):
@@ -185,66 +227,100 @@ class JoinGroupChoiceView(APIView):
 @login_required
 def assignment_detail_view(request, post_id):
     user = request.user
-    post = get_object_or_404(Post, id=post_id)
-
-    # Find the user's group for this post
-    group = Group.objects.filter(post=post, members=user).first()
-
-    if group is None:
-        # Optionally: show a message or redirect
-        return render(request, "myapp/assignment_detail.html", {
-            "post": post,
-            "error": "You are not in a group for this assignment."
-        })
-
-    # Get or create the submission object
-    submission, created = Submission.objects.get_or_create(
-        post=post,
-        student=user,
-        defaults={"group": group}
+    post = get_object_or_404(Post.objects.select_related("author", "course"), id=post_id)
+    user_role = (
+        (user.profile.role or "").strip().lower()
+        if hasattr(user, "profile")
+        else ""
     )
-    
-    groups = None
-    if post.group_type == "manual":
-        group = post.groups.all()
 
-    # Handle submission POST
+    user_group = Group.objects.filter(post=post, members=user).first()
+    submission = Submission.objects.filter(post=post, student=user).first()
+    can_submit = user_role == "student"
+    submit_error = None
+    groups = Group.objects.none()
+
+    if user_role != "student":
+        submit_error = "Only students can submit assignments."
+
+    if post.group_type == "manual":
+        groups = post.groups.prefetch_related("members").all()
+        if user_role == "student" and user_group is None:
+            can_submit = False
+            submit_error = "Join a group first before submitting."
+    elif post.group_type == "automatic" and user_role == "student" and user_group is None:
+        can_submit = False
+        submit_error = "You are not assigned to an automatic group yet."
+
     if request.method == "POST":
-        form = SubmissionForm(request.POST, request.FILES, instance=submission)
-        if form.is_valid():
-            form.save()
-            return redirect("dashboard")
+        if user_role != "student":
+            return HttpResponseForbidden("Only students can submit assignments.")
+        if submission:
+            return redirect("assignment_detail", post_id=post.id)
+        if not can_submit:
+            form = SubmissionForm()
+        else:
+            form = SubmissionForm(request.POST, request.FILES)
+            if form.is_valid():
+                new_submission = form.save(commit=False)
+                new_submission.post = post
+                new_submission.student = user
+
+                if post.group_type == "individual":
+                    individual_group, _ = Group.objects.get_or_create(
+                        post=post,
+                        name=f"{user.username}-individual",
+                    )
+                    if not individual_group.members.filter(id=user.id).exists():
+                        individual_group.members.add(user)
+                    new_submission.group = individual_group
+                    user_group = individual_group
+                else:
+                    new_submission.group = user_group
+
+                new_submission.save()
+                return redirect("assignment_detail", post_id=post.id)
     else:
-        form = SubmissionForm(instance=submission)
+        form = SubmissionForm()
 
     return render(request, "myapp/assignment_detail.html", {
         "post": post,
-        "group": group,
-        "groups":groups,
+        "group": user_group,
+        "groups": groups,
         "submission": submission,
-        "form":form,
+        "form": form,
+        "can_submit": can_submit and not submission,
+        "submit_error": submit_error,
     })
 
+
 @login_required
-def join_group(request, group_id):
-    group = get_object_or_404(Group, id=group_id)
-    post = group.post
-    user = request.user
+def assignment_edit_view(request, post_id):
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can edit assignments.")
 
-    # Only allow joining for manual groups
-    if post.group_type != "manual":
-        return JsonResponse({"error": "Joining not allowed for this assignment."}, status=400)
+    post = get_object_or_404(Post, id=post_id, author=request.user)
 
-    # Check if already in a group for this assignment
-    existing_group = Group.objects.filter(post=post, members=user).first()
-    if existing_group:
-        return JsonResponse({"error": "You are already in a group."}, status=400)
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect("assignment_detail", post_id=post.id)
+    else:
+        form = PostForm(instance=post)
 
-    # Check group capacity
-    if post.max_students_per_group:
-        if group.members.count() >= post.max_students_per_group:
-            return JsonResponse({"error": "Group is full."}, status=400)
+    return render(request, "myapp/assignment_edit.html", {"form": form, "post": post})
 
-    group.members.add(user)
 
-    return JsonResponse({"success": "Successfully joined group."})
+@login_required
+def assignment_delete_view(request, post_id):
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can delete assignments.")
+
+    post = get_object_or_404(Post, id=post_id, author=request.user)
+
+    if request.method == "POST":
+        post.delete()
+        return redirect("dashboard")
+
+    return render(request, "myapp/assignment_confirm_delete.html", {"post": post})

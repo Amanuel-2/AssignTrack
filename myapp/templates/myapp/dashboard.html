@@ -1,13 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Assignments</h2>
+
 {% for post in posts %}
 <div class="assignment-card">
     <h4>{{ post.title }}</h4>
-    <p>Deadline: {{ post.deadline|date:"M d, Y H:i" }}</p>
-    <p>Status: {{ post.user_status }}</p>
-    <p>Progress: {{ post.progress }}</p>
+    <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
+    <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
+    <p><strong>Deadline:</strong> {{ post.deadline|date:"M d, Y H:i" }}</p>
+    <p>
+        <strong>Status:</strong>
+        <span class="badge {{ post.status_class }}">{{ post.user_status }}</span>
+    </p>
+    <p><strong>Progress:</strong> {{ post.progress }}</p>
     {% if post.user_group %}
-        <p>Group: {{ post.user_group }}</p>
+    <p><strong>Group:</strong> {{ post.user_group }}</p>
     {% endif %}
 
-    <a href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+    <div class="actions">
+        <a class="btn btn-primary" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+        {% if post.can_manage %}
+        <a class="btn btn-secondary" href="{% url 'assignment_edit' post.id %}">Edit</a>
+        <a class="btn btn-danger" href="{% url 'assignment_delete' post.id %}">Delete</a>
+        {% endif %}
+    </div>
 </div>
+{% empty %}
+<p>No assignments found.</p>
 {% endfor %}
+{% endblock %}
