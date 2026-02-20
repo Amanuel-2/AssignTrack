@@ -19,7 +19,14 @@ class PostSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
 
         #Only lecturer can create assignment
-        if request.user.profile.role != 'lecturer':
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError("Authentication is required.")
+        role = (
+            (request.user.profile.role or "").strip().lower()
+            if hasattr(request.user, "profile")
+            else ""
+        )
+        if role != "lecturer":
             raise serializers.ValidationError("Only lecturers can create assignments.")
 
         return data
@@ -29,6 +36,10 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = "__all__"
+
+
+class JoinGroupChoiceSerializer(serializers.Serializer):
+    group = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
@@ -41,7 +52,14 @@ class SubmissionSerializer(serializers.ModelSerializer):
         post = data['post']
 
         # Only students can submit
-        if request.user.profile.role != 'student':
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError("Authentication is required.")
+        role = (
+            (request.user.profile.role or "").strip().lower()
+            if hasattr(request.user, "profile")
+            else ""
+        )
+        if role != "student":
             raise serializers.ValidationError("Only students can submit.")
 
         # Check deadline

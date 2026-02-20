@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_view,login_view,logout_view,profile_view,PostCreateView,SubmissionCreateView,JoinGroupView
+from .views import register_view,login_view,logout_view,profile_view,PostCreateView,SubmissionCreateView,JoinGroupView,JoinGroupChoiceView
 from . import views
 
 from django.conf import settings
@@ -14,5 +14,6 @@ urlpatterns = [
 
     path('assignments/create/', PostCreateView.as_view()),
     path('groups/<int:group_id>/join/', JoinGroupView.as_view()),
+    path('groups/join/', JoinGroupChoiceView.as_view()),
     path('submit/', SubmissionCreateView.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

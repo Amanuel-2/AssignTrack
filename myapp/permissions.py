@@ -1,22 +1,22 @@
-from requests import request
 from rest_framework.permissions import BasePermission
 
 
 class IsLecturer(BasePermission):
     def has_permission(self, request, view):
-        # Allow GET so browsable API can load
-        if request.method == "GET":
+        if not request.user.is_authenticated:
+            return False
+        if request.method in ("GET", "HEAD", "OPTIONS"):
             return True
-
-        # Only allow POST for authenticated teachers
-        return (
-            request.user.is_authenticated and
-            hasattr(request.user, "profile") and
-            request.user.profile.role == "lecturer"
-        )
+        if not hasattr(request.user, "profile"):
+            return False
+        role = (request.user.profile.role or "").strip().lower()
+        return role == "lecturer"
 
 class IsStudent(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == 'student'
+        if not request.user.is_authenticated or not hasattr(request.user, "profile"):
+            return False
+        role = (request.user.profile.role or "").strip().lower()
+        return role == "student"
 
     

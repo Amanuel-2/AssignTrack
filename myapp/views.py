@@ -1,28 +1,34 @@
-from datetime import timezone
-from django.shortcuts import redirect, render
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login,logout
-from django.contrib.auth.decorators import login_required
-from requests import Response
-from .forms import CustomUserCreationForm
-
-from rest_framework import generics
-from rest_framework.views import APIView
-from .models import Post,Group,Submission
-from .serializers import PostSerializer,SubmissionSerializer
-from .permissions import IsLecturer,IsStudent
 from math import ceil
-from rest_framework.permissions import IsAuthenticated
+
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .forms import CustomUserCreationForm
+from .models import Group, Post, Submission
+from .permissions import IsLecturer, IsStudent
+from .serializers import JoinGroupChoiceSerializer, PostSerializer, SubmissionSerializer
+
+
 def register_view(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
+            login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
             return redirect("profile")
     else:
         form = CustomUserCreationForm()
     return render(request, "myapp/register.html", {"form": form})
+
 
 def login_view(request):
     if request.method == "POST":
@@ -44,77 +50,116 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     return render(request, "myapp/profile.html")
- 
+
+
 @login_required
 def dashboard_view(request):
-    return render(request, 'myapp/dashboard.html')
-    
+    return render(request, "myapp/dashboard.html")
+
+
 class PostCreateView(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsLecturer]
 
     def perform_create(self, serializer):
-        post = serializer.save()
-        if post.group_type in ['manual', 'automatic'] and post.max_students_per_group:
+        post = serializer.save(author=self.request.user)
+        if post.group_type not in ["manual", "automatic"]:
+            return
+        if not post.max_students_per_group or post.max_students_per_group <= 0:
+            return
 
-            students = post.course.students.all()
-            total_students = students.count()
+        students = User.objects.filter(profile__role="student")
+        total_students = students.count()
+        if total_students == 0:
+            return
 
-            number_of_groups = ceil(total_students / post.max_students_per_group)
+        number_of_groups = ceil(total_students / post.max_students_per_group)
+        groups = []
+        for i in range(1, number_of_groups + 1):
+            group = Group.objects.create(post=post, name=f"Group {i}")
+            groups.append(group)
 
-            groups = []
+        if post.group_type == "automatic":
+            group_index = 0
+            for student in students:
+                if group_index >= len(groups):
+                    break
+                groups[group_index].members.add(student)
+                if groups[group_index].members.count() >= post.max_students_per_group:
+                    group_index += 1
 
-            for i in range(1, number_of_groups + 1):
-                group = Group.objects.create(
-                    post=post,
-                    name=f"Group {i}"
-                )
-                groups.append(group)
 
-            # Automatic assignment
-            if post.group_type == 'automatic':
-                group_index = 0
-
-                for student in students:
-                    groups[group_index].members.add(student)
-
-                    if groups[group_index].members.count() >= post.max_students_per_group:
-                        group_index += 1
 class SubmissionCreateView(generics.CreateAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
     permission_classes = [IsStudent]
 
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user)
+
+
 class JoinGroupView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, group_id):
-
-        try:
-            group = Group.objects.get(id=group_id)
-        except Group.DoesNotExist:
-            return Response({"error": "Group not found"}, status=404)
+    def _join_group(self, request, group):
+        role = (
+            (request.user.profile.role or "").strip().lower()
+            if hasattr(request.user, "profile")
+            else ""
+        )
+        if role != "student":
+            return Response({"error": "Only students can join groups"}, status=status.HTTP_403_FORBIDDEN)
 
         post = group.post
 
-        # Only students can join
-        if request.user.profile.role != 'student':
-            return Response({"error": "Only students can join groups"}, status=403)
-
-        # Check deadline
         if timezone.now() > post.deadline:
-            return Response({"error": "Deadline passed"}, status=400)
+            return Response({"error": "Deadline passed"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Prevent joining if automatic
-        if post.group_type == 'automatic':
-            return Response({"error": "Automatic assignment enabled"}, status=400)
+        if post.group_type == "automatic":
+            return Response({"error": "Automatic assignment enabled"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check group capacity
+        if not post.max_students_per_group or post.max_students_per_group <= 0:
+            return Response({"error": "Group size not configured"}, status=status.HTTP_400_BAD_REQUEST)
+
         if group.members.count() >= post.max_students_per_group:
-            return Response({"error": "Group is full"}, status=400)
+            return Response({"error": "Group is full"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Group.objects.filter(post=post, members=request.user).exclude(id=group.id).exists():
+            return Response(
+                {"error": "You already joined another group for this assignment"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         group.members.add(request.user)
+        return Response({"message": "Joined successfully"}, status=status.HTTP_200_OK)
 
-        return Response({"message": "Joined successfully"})
-        
+    def post(self, request, group_id):
+        try:
+            group = Group.objects.select_related("post").get(id=group_id)
+        except Group.DoesNotExist:
+            return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+        return self._join_group(request, group)
+
+
+class JoinGroupChoiceView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        groups = Group.objects.select_related("post").all()
+        data = [
+            {
+                "id": group.id,
+                "name": group.name,
+                "assignment": group.post.title,
+            }
+            for group in groups
+        ]
+        return Response({"groups": data}, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = JoinGroupChoiceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        group = serializer.validated_data["group"]
+        joiner = JoinGroupView()
+        return joiner._join_group(request, group)
