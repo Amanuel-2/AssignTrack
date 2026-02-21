@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapp',
+    'accounts',
+    'courses',
+    'assignments',
+    'groups',
+    'dashboard',
     'rest_framework',
     # django-allauth apps
     'django.contrib.sites',
@@ -76,7 +81,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "myapp" / "templates"],
+        'DIRS': [BASE_DIR / "templates", BASE_DIR / "myapp" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -137,6 +142,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 AUTHENTICATION_BACKENDS = [
     # allow login in admin

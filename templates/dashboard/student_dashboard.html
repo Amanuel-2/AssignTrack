@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="assignment-card">
+    <h2>Student Dashboard</h2>
+    {% if forbidden %}
+    <p class="error-text">Only students can access this dashboard.</p>
+    {% else %}
+    <h3>Enrolled Courses</h3>
+    <ul>
+        {% for c in enrolled_courses %}
+        <li>{{ c.name }}</li>
+        {% empty %}
+        <li>No enrolled courses</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Joined Groups</h3>
+    <ul>
+        {% for g in joined_groups %}
+        <li>{{ g.name }} ({{ g.post.title }})</li>
+        {% empty %}
+        <li>No groups joined</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Upcoming Assignments</h3>
+    <ul>
+        {% for a in upcoming_assignments %}
+        <li>
+            {{ a.title }} - {{ a.deadline|date:"Y-m-d H:i" }}
+            {% if a.has_submitted %}
+            <span class="badge submitted">Submitted</span>
+            {% else %}
+            <span class="badge pending">Pending</span>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li>No upcoming assignments</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Overdue Assignments</h3>
+    <ul>
+        {% for a in overdue_assignments %}
+        <li>{{ a.title }} - <span class="badge overdue">Overdue</span></li>
+        {% empty %}
+        <li>No overdue assignments</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Notifications</h3>
+    <ul>
+        {% for n in notifications %}
+        <li>{{ n }}</li>
+        {% empty %}
+        <li>No notifications</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endblock %}

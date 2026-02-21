@@ -16,9 +16,31 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+
+def api_root(request):
+    return JsonResponse(
+        {
+            "message": "AssignTrack API",
+            "endpoints": {
+                "accounts": "/api/accounts/",
+                "courses": "/api/courses/",
+                "assignments": "/api/assignments/",
+                "groups": "/api/groups/",
+                "legacy": "/api/dashboard/",
+            },
+        }
+    )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('api/',include('myapp.urls'))
+    path('api/', api_root, name='api_root'),
+    path('api/accounts/', include('accounts.urls')),
+    path('api/courses/', include('courses.urls')),
+    path('api/assignments/', include('assignments.urls')),
+    path('api/groups/', include('groups.urls')),
+    path('dashboard/', include('dashboard.urls')),
+    path('api/', include('myapp.urls')),
 ]

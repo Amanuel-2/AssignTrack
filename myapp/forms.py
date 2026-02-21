@@ -1,54 +1,5 @@
-from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-from .models import Post, Profile, Submission
+from accounts.forms import CustomUserCreationForm
+from assignments.forms import PostForm, SubmissionForm
 
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    role = forms.ChoiceField(
-        choices=(
-            ("student", "Student"),
-            ("lecturer", "Instructor"),
-        ),
-        required=True,
-    )
+__all__ = ["CustomUserCreationForm", "SubmissionForm", "PostForm"]
 
-    class Meta:
-        model = User
-        fields = ["username", "email", "role", "password1", "password2"]
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
-        role = self.cleaned_data["role"]
-        if commit:
-            user.save()
-            profile, _ = Profile.objects.get_or_create(
-                user=user,
-                defaults={"role": "student"},
-            )
-            profile.role = role
-            profile.save(update_fields=["role"])
-        return user
-
-class SubmissionForm(forms.ModelForm):
-    class Meta:
-        model = Submission
-        fields = ['file']
-
-
-class PostForm(forms.ModelForm):
-    class Meta:
-        model = Post
-        fields = [
-            "course",
-            "title",
-            "content",
-            "deadline",
-            "attachment",
-            "group_type",
-            "max_students_per_group",
-        ]
-        widgets = {
-            "deadline": forms.DateTimeInput(attrs={"type": "datetime-local"}),
-        }

@@ -14,6 +14,8 @@
     <nav class="nav-bar">
         <a href="{% url 'profile' %}">Home</a> |
         <a href="{% url 'dashboard' %}">Dashboard</a> |
+        <a href="{% url 'student_dashboard' %}">Student Dashboard</a> |
+        <a href="{% url 'instructor_dashboard' %}">Instructor Dashboard</a> |
 
         {% if user.is_authenticated %}
         <span>Welcome {{ user.username }}</span> |

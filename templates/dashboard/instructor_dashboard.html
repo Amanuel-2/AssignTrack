@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="assignment-card">
+    <h2>Instructor Dashboard</h2>
+    {% if forbidden %}
+    <p class="error-text">Only instructors can access this dashboard.</p>
+    {% else %}
+    <h3>Courses You Teach</h3>
+    <ul>
+        {% for c in courses %}
+        <li>{{ c.name }}</li>
+        {% empty %}
+        <li>No courses assigned</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Assignments You Created</h3>
+    <ul>
+        {% for a in assignments %}
+        <li>
+            {{ a.title }}{% if a.course %} ({{ a.course.name }}){% endif %}
+            <a class="btn btn-secondary" href="{% url 'assignment_edit' a.id %}">Edit</a>
+            <a class="btn btn-danger" href="{% url 'assignment_delete' a.id %}">Delete</a>
+        </li>
+        {% empty %}
+        <li>No assignments created</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Student Submissions</h3>
+    <ul>
+        {% for s in submissions %}
+        <li>{{ s.student.username }} submitted {{ s.post.title }} at {{ s.submitted_at|date:"Y-m-d H:i" }}</li>
+        {% empty %}
+        <li>No submissions yet</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Group Management</h3>
+    <ul>
+        {% for g in groups %}
+        <li>{{ g.post.title }} - {{ g.name }} ({{ g.members.count }} members)</li>
+        {% empty %}
+        <li>No groups yet</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endblock %}
+
