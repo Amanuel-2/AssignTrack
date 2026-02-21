@@ -11,13 +11,55 @@ from rest_framework.permissions import SAFE_METHODS
 from accounts.permissions import IsLecturer, IsStudent
 from assignments.forms import PostForm, SubmissionForm
 from assignments.serializers import AssignmentSerializer, SubmissionSerializer
-from myapp.models import Group, Post, Submission
+from myapp.models import Course, Group, Post, Submission
 
 
 def _is_lecturer(user):
     if not user.is_authenticated or not hasattr(user, "profile"):
         return False
     return (user.profile.role or "").strip().lower() == "lecturer"
+
+
+DEMO_CS_COURSES = [
+    "Introduction to Computer Science",
+    "Data Structures",
+    "Algorithms",
+    "Database Systems",
+    "Operating Systems",
+    "Computer Networks",
+    "Software Engineering",
+    "Web Development",
+]
+
+
+def _ensure_demo_cs_courses(lecturer):
+    for name in DEMO_CS_COURSES:
+        Course.objects.get_or_create(name=name, lecturer=lecturer)
+    return Course.objects.filter(lecturer=lecturer, name__in=DEMO_CS_COURSES).order_by("name")
+
+
+def _create_groups_for_post(post):
+    if post.group_type not in ["manual", "automatic"]:
+        return
+    if not post.max_students_per_group or post.max_students_per_group <= 0:
+        return
+
+    students = User.objects.filter(profile__role="student", is_active=True).distinct()
+    total_students = students.count()
+    if total_students == 0:
+        return
+
+    number_of_groups = ceil(total_students / post.max_students_per_group)
+    groups = [Group.objects.create(post=post, name=f"Group {i}") for i in range(1, number_of_groups + 1)]
+
+    if post.group_type == "automatic":
+        group_index = 0
+        for student in students:
+            if group_index >= len(groups):
+                break
+            groups[group_index].members.add(student)
+            if groups[group_index].members.count() >= post.max_students_per_group:
+                group_index += 1
 
 
 class PostCreateView(generics.ListCreateAPIView):
@@ -32,27 +74,30 @@ class PostCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         post = serializer.save(author=self.request.user)
-        if post.group_type not in ["manual", "automatic"]:
-            return
-        if not post.max_students_per_group or post.max_students_per_group <= 0:
-            return
+        _create_groups_for_post(post)
 
-        students = User.objects.filter(profile__role="student", is_active=True).distinct()
-        total_students = students.count()
-        if total_students == 0:
-            return
 
-        number_of_groups = ceil(total_students / post.max_students_per_group)
-        groups = [Group.objects.create(post=post, name=f"Group {i}") for i in range(1, number_of_groups + 1)]
+@login_required
+def instructor_assignment_create_view(request):
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can create assignments.")
 
-        if post.group_type == "automatic":
-            group_index = 0
-            for student in students:
-                if group_index >= len(groups):
-                    break
-                groups[group_index].members.add(student)
-                if groups[group_index].members.count() >= post.max_students_per_group:
-                    group_index += 1
+    allowed_courses = _ensure_demo_cs_courses(request.user)
+
+    if request.method == "POST":
+        form = PostForm(request.POST, request.FILES)
+        form.fields["course"].queryset = allowed_courses
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            _create_groups_for_post(post)
+            return redirect("instructor_dashboard")
+    else:
+        form = PostForm()
+        form.fields["course"].queryset = allowed_courses
+
+    return render(request, "dashboard/assignment_create.html", {"form": form})
 
 
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -172,4 +217,3 @@ def assignment_delete_view(request, post_id):
         return redirect("dashboard")
 
     return render(request, "myapp/assignment_confirm_delete.html", {"post": post})
-

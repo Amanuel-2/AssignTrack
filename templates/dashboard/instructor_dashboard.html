@@ -6,6 +6,12 @@
     {% if forbidden %}
     <p class="error-text">Only instructors can access this dashboard.</p>
     {% else %}
+    <p>
+        <a class="btn btn-primary" href="{% url 'instructor_assignment_create' %}">
+            Create Assignment
+        </a>
+    </p>
+
     <h3>Courses You Teach</h3>
     <ul>
         {% for c in courses %}
@@ -48,4 +54,3 @@
     {% endif %}
 </div>
 {% endblock %}
-
