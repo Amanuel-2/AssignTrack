@@ -1,6 +1,6 @@
 from django import forms
 
-from myapp.models import Post, Submission
+from assignments.models import Post, Submission
 
 
 class SubmissionForm(forms.ModelForm):
@@ -24,4 +24,3 @@ class PostForm(forms.ModelForm):
         widgets = {
             "deadline": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
-

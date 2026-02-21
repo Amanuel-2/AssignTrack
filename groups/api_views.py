@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from myapp.models import Group
+from groups.models import Group
 
 
 @api_view(["POST"])
@@ -63,4 +63,3 @@ def join_group_api(request, group_id):
     return Response(
         {"success": "Successfully joined group.", "member_count": group.members.count()}
     )
-

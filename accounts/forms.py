@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from myapp.models import Profile
+from accounts.models import Profile
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -32,4 +32,3 @@ class CustomUserCreationForm(UserCreationForm):
             profile.role = role
             profile.save(update_fields=["role"])
         return user
-

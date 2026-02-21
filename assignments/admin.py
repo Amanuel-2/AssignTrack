@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from myapp.models import Post, Submission
+from assignments.models import Post, Submission
 
 
 @admin.register(Post)
@@ -14,4 +14,3 @@ class AssignmentAdmin(admin.ModelAdmin):
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ("post", "student", "submitted_at")
     search_fields = ("post__title", "student__username")
-

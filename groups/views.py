@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from groups.serializers import JoinGroupChoiceSerializer
-from myapp.models import Group
+from groups.models import Group
 
 
 class JoinGroupView(APIView):
@@ -59,4 +59,3 @@ class JoinGroupChoiceView(APIView):
         group = serializer.validated_data["group"]
         joiner = JoinGroupView()
         return joiner._join_group(request, group)
-

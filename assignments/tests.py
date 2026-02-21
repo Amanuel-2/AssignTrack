@@ -5,7 +5,10 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Group, Post, Profile, Submission
+from accounts.models import Profile
+from assignments.models import Post, Submission
+from courses.models import Course
+from groups.models import Group
 
 
 class JoinGroupApiTests(TestCase):
@@ -104,13 +107,9 @@ class AssignmentDetailTests(TestCase):
         self.assertFalse(response.context["can_submit"])
 
     def test_assignment_detail_displays_course_and_instructor(self):
-        course = self.post.course = self.post.course or None
-        if course is None:
-            from .models import Course
-
-            course = Course.objects.create(name="Web Development", lecturer=self.lecturer)
-            self.post.course = course
-            self.post.save(update_fields=["course"])
+        course = Course.objects.create(name="Web Development", lecturer=self.lecturer)
+        self.post.course = course
+        self.post.save(update_fields=["course"])
 
         self.client.login(username="studentA", password="pass1234")
         url = reverse("assignment_detail", kwargs={"post_id": self.post.id})
@@ -234,3 +233,4 @@ class InstructorHtmlCrudTests(TestCase):
 
         self.assertEqual(edit_response.status_code, 403)
         self.assertEqual(delete_response.status_code, 403)
+

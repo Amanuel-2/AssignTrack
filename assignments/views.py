@@ -10,8 +10,10 @@ from rest_framework.permissions import SAFE_METHODS
 
 from accounts.permissions import IsLecturer, IsStudent
 from assignments.forms import PostForm, SubmissionForm
+from assignments.models import Post, Submission
 from assignments.serializers import AssignmentSerializer, SubmissionSerializer
-from myapp.models import Course, Group, Post, Submission
+from courses.models import Course
+from groups.models import Group
 
 
 def _is_lecturer(user):

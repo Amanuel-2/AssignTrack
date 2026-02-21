@@ -1,7 +1,8 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from myapp.models import Group, Post, Submission
+from assignments.models import Post, Submission
+from groups.models import Group
 
 
 class AssignmentSerializer(serializers.ModelSerializer):

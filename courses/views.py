@@ -2,8 +2,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.permissions import IsLecturer
+from courses.models import Course
 from courses.serializers import CourseSerializer
-from myapp.models import Course
 
 
 class CourseListCreateView(generics.ListCreateAPIView):
@@ -24,4 +24,3 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ("PUT", "PATCH", "DELETE"):
             return [IsLecturer()]
         return [IsAuthenticated()]
-

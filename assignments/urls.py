@@ -11,6 +11,7 @@ from assignments.views import (
 
 urlpatterns = [
     path("", PostCreateView.as_view(), name="assignment_list_create"),
+    path("create/", PostCreateView.as_view(), name="assignment_create"),
     path("manage/<int:pk>/", PostDetailView.as_view(), name="assignment_api_detail"),
     path("<int:post_id>/", assignment_detail_view, name="assignment_detail"),
     path("<int:post_id>/edit/", assignment_edit_view, name="assignment_edit"),

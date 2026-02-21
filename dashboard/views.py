@@ -3,7 +3,9 @@ from django.db.models import Case, IntegerField, Value, When
 from django.shortcuts import render
 from django.utils import timezone
 
-from myapp.models import Course, Group, Post, Submission
+from assignments.models import Post, Submission
+from courses.models import Course
+from groups.models import Group
 
 
 def _role(user):

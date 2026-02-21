@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from myapp.models import Post, Submission
+from assignments.models import Post, Submission
 
 
 class DashboardAssignmentSerializer(serializers.ModelSerializer):
@@ -18,4 +18,3 @@ class DashboardAssignmentSerializer(serializers.ModelSerializer):
         if has_submission:
             return "Submitted"
         return "Overdue" if obj.is_overdue else "Pending"
-

@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from django.http import JsonResponse
+from dashboard.views import dashboard_view
 
 
 def api_root(request):
@@ -39,10 +40,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('api/', api_root, name='api_root'),
+    path('api/', include('accounts.urls')),
     path('api/accounts/', include('accounts.urls')),
     path('api/courses/', include('courses.urls')),
     path('api/assignments/', include('assignments.urls')),
     path('api/groups/', include('groups.urls')),
+    path('api/dashboard/', dashboard_view, name='legacy_dashboard'),
     path('dashboard/', include('dashboard.urls')),
-    path('api/', include('myapp.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
