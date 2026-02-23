@@ -1,118 +1,200 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>Profile</h2>
+<div class="page-container">
 
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Date Joined:</strong> {{ user.date_joined }}</p>
-    <p><strong>Role:</strong> {{ role|default:"N/A"|title }}</p>
+    <!-- Profile Header Card -->
+    <div class="section-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {{ user.username|slice:":1"|upper }}
+            </div>
+            <div class="profile-info">
+                <h2>{{ user.username }}</h2>
+                <span class="profile-role-badge">{{ role|default:"N/A"|title }}</span>
+            </div>
+        </div>
 
-    <div class="actions">
-        {% if role == "student" %}
-        <a class="btn btn-primary" href="{% url 'dashboard' %}">Dashboard</a>
-        {% elif role == "lecturer" %}
-        <a class="btn btn-primary" href="{% url 'instructor_dashboard' %}">Instructor Dashboard</a>
-        {% endif %}
-    </div>
-</div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Email</span>
+            <span class="profile-value">{{ user.email|default:"—" }}</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Joined</span>
+            <span class="profile-value">{{ user.date_joined|date:"M d, Y" }}</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Role</span>
+            <span class="profile-value">{{ role|default:"N/A"|title }}</span>
+        </div>
 
-{% if role == "student" %}
-<div class="assignment-card">
-    <h3>Enrolled Courses</h3>
-    <ul>
-        {% for c in enrolled_courses %}
-        <li>{{ c.name }}</li>
-        {% empty %}
-        <li>No enrolled courses</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Joined Groups</h3>
-    <ul>
-        {% for g in joined_groups %}
-        <li>{{ g.name }} ({{ g.post.title }})</li>
-        {% empty %}
-        <li>No groups joined</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Upcoming Assignments</h3>
-    <ul>
-        {% for a in upcoming_assignments %}
-        <li>
-            {{ a.title }} - {{ a.deadline|date:"Y-m-d H:i" }}
-            {% if a.has_submitted %}
-            <span class="badge submitted">Submitted</span>
-            {% else %}
-            <span class="badge pending">Pending</span>
+        <div class="actions">
+            {% if role == "student" %}
+            <a class="btn btn-primary" href="{% url 'dashboard' %}">Go to Dashboard</a>
+            {% elif role == "lecturer" %}
+            <a class="btn btn-primary" href="{% url 'instructor_dashboard' %}">Instructor Dashboard</a>
             {% endif %}
-        </li>
-        {% empty %}
-        <li>No upcoming assignments</li>
-        {% endfor %}
-    </ul>
+        </div>
+    </div>
 
-    <h3>Overdue Assignments</h3>
-    <ul>
-        {% for a in overdue_assignments %}
-        <li>{{ a.title }} - <span class="badge overdue">Overdue</span></li>
-        {% empty %}
-        <li>No overdue assignments</li>
-        {% endfor %}
-    </ul>
+    <!-- Student Section -->
+    {% if role == "student" %}
 
-    <h3>Notifications</h3>
-    <ul>
-        {% for n in notifications %}
-        <li>{{ n }}</li>
-        {% empty %}
-        <li>No notifications</li>
-        {% endfor %}
-    </ul>
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Enrolled Courses</h2>
+        </div>
+        <div class="course-grid">
+            {% for c in enrolled_courses %}
+            <span class="course-tag">{{ c.name }}</span>
+            {% empty %}
+            <p class="empty-state">No enrolled courses.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Joined Groups</h2>
+        </div>
+        <div class="course-grid">
+            {% for g in joined_groups %}
+            <span class="course-tag">{{ g.name }} &mdash; {{ g.post.title }}</span>
+            {% empty %}
+            <p class="empty-state">No groups joined.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Upcoming Assignments</h2>
+        </div>
+        <div class="assignment-list">
+            {% for a in upcoming_assignments %}
+            <div class="assignment-item">
+                <div class="assignment-item-left">
+                    <a class="assignment-item-title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+                    <span class="assignment-course">Due: {{ a.deadline|date:"Y-m-d H:i" }}</span>
+                </div>
+                {% if a.has_submitted %}
+                <span class="badge submitted">Submitted</span>
+                {% else %}
+                <span class="badge pending">Pending</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="empty-state">No upcoming assignments.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Overdue Assignments</h2>
+        </div>
+        <div class="assignment-list">
+            {% for a in overdue_assignments %}
+            <div class="assignment-item">
+                <div class="assignment-item-left">
+                    <a class="assignment-item-title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+                </div>
+                <span class="badge overdue">Overdue</span>
+            </div>
+            {% empty %}
+            <p class="empty-state">No overdue assignments.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Notifications</h2>
+        </div>
+        <div class="notification-list">
+            {% for n in notifications %}
+            <div class="notification-item">{{ n }}</div>
+            {% empty %}
+            <p class="empty-state">No notifications.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Lecturer Section -->
+    {% elif role == "lecturer" %}
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Courses You Teach</h2>
+        </div>
+        <div class="course-grid">
+            {% for c in courses %}
+            <span class="course-tag">{{ c.name }}</span>
+            {% empty %}
+            <p class="empty-state">No courses assigned.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Assignments You Created</h2>
+        </div>
+        <div class="assignment-list">
+            {% for a in assignments %}
+            <div class="assignment-item">
+                <div class="assignment-item-left">
+                    <a class="assignment-item-title" href="{% url 'assignment_review' a.id %}">{{ a.title }}</a>
+                    {% if a.course %}
+                    <span class="assignment-course">{{ a.course.name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="empty-state">No assignments created.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Student Submissions</h2>
+        </div>
+        <div class="row-list">
+            {% for s in submissions %}
+            <a class="submission-row" href="{% url 'assignment_review' s.post.id %}">
+                <div class="submission-left">
+                    <span class="submission-student">{{ s.student.username }}</span>
+                    <span class="submission-title">{{ s.post.title }}</span>
+                </div>
+                <span class="submission-date">{{ s.submitted_at|date:"M d, Y · H:i" }}</span>
+            </a>
+            {% empty %}
+            <p class="empty-state">No submissions yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Group Management</h2>
+        </div>
+        <div class="row-list">
+            {% for g in groups %}
+            <a class="group-row" href="{% url 'assignment_review' g.post.id %}">
+                <div class="group-left">
+                    <span class="group-assignment">{{ g.post.title }}</span>
+                    <span class="group-name">{{ g.name }}</span>
+                </div>
+                <span class="member-badge">{{ g.members.count }} members</span>
+            </a>
+            {% empty %}
+            <p class="empty-state">No groups yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% endif %}
+
 </div>
-{% elif role == "lecturer" %}
-<div class="assignment-card">
-    <h3>Courses You Teach</h3>
-    <ul>
-        {% for c in courses %}
-        <li>{{ c.name }}</li>
-        {% empty %}
-        <li>No courses assigned</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Assignments You Created</h3>
-    <ul>
-        {% for a in assignments %}
-        <li>
-            <a class="assignment-link" href="{% url 'assignment_review' a.id %}">{{ a.title }}</a>
-            {% if a.course %} ({{ a.course.name }}){% endif %}
-        </li>
-        {% empty %}
-        <li>No assignments created</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Student Submissions</h3>
-    <ul>
-        {% for s in submissions %}
-        <li>{{ s.student.username }} submitted {{ s.post.title }} at {{ s.submitted_at|date:"Y-m-d H:i" }}</li>
-        {% empty %}
-        <li>No submissions yet</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Group Management</h3>
-    <ul>
-        {% for g in groups %}
-        <li>{{ g.post.title }} - {{ g.name }} ({{ g.members.count }} members)</li>
-        {% empty %}
-        <li>No groups yet</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
-
 {% endblock %}

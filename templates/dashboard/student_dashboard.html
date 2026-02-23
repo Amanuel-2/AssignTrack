@@ -1,84 +1,132 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>Student Dashboard</h2>
+<div class="page-container">
     {% if forbidden %}
     <p class="error-text">Only students can access this dashboard.</p>
     {% else %}
-    <h3>Enrolled Courses</h3>
-    <ul>
-        {% for c in enrolled_courses %}
-        <li>{{ c.name }}</li>
-        {% empty %}
-        <li>No enrolled courses</li>
-        {% endfor %}
-    </ul>
 
-    <h3>Joined Groups</h3>
-    <ul>
-        {% for g in joined_groups %}
-        <li>{{ g.name }} ({{ g.post.title }})</li>
-        {% empty %}
-        <li>No groups joined</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Upcoming Assignments</h3>
-    <ul>
-        {% for a in upcoming_assignments %}
-        <li>
-            {{ a.title }} - {{ a.deadline|date:"Y-m-d H:i" }}
-            {% if a.has_submitted %}
-            <span class="badge submitted">Submitted</span>
-            {% else %}
-            <span class="badge pending">Pending</span>
-            {% endif %}
-        </li>
-        {% empty %}
-        <li>No upcoming assignments</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Overdue Assignments</h3>
-    <ul>
-        {% for a in overdue_assignments %}
-        <li>{{ a.title }} - <span class="badge overdue">Overdue</span></li>
-        {% empty %}
-        <li>No overdue assignments</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Notifications</h3>
-    <ul>
-        {% for n in notifications %}
-        <li>{{ n }}</li>
-        {% empty %}
-        <li>No notifications</li>
-        {% endfor %}
-    </ul>
-
-    <h3>Assignment Workspace</h3>
-    {% for post in posts %}
-    <div class="assignment-card">
-        <h4>{{ post.title }}</h4>
-        <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
-        <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
-        <p><strong>Deadline:</strong> {{ post.deadline|date:"M d, Y H:i" }}</p>
-        <p>
-            <strong>Status:</strong>
-            <span class="badge {{ post.status_class }}">{{ post.user_status }}</span>
-        </p>
-        {% if post.user_group %}
-        <p><strong>Group:</strong> {{ post.user_group }}</p>
-        {% endif %}
-        <div class="actions">
-            <a class="btn btn-primary" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Student Dashboard</h1>
+            <p class="dashboard-subtitle">Track your assignments, groups, and upcoming deadlines.</p>
         </div>
     </div>
-    {% empty %}
-    <p>No assignments found.</p>
-    {% endfor %}
+
+    <!-- Enrolled Courses -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Enrolled Courses</h2>
+        </div>
+        <div class="course-grid">
+            {% for c in enrolled_courses %}
+            <span class="course-tag">{{ c.name }}</span>
+            {% empty %}
+            <p class="empty-state">No enrolled courses.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    {% if notifications %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Notifications</h2>
+        </div>
+        <div class="notification-list">
+            {% for n in notifications %}
+            <div class="notification-item">{{ n }}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Assignments -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Upcoming Assignments</h2>
+        </div>
+        <div class="assignment-list">
+            {% for a in upcoming_assignments %}
+            <div class="assignment-item">
+                <div class="assignment-item-left">
+                    <a class="assignment-item-title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+                    <span class="assignment-course">Due: {{ a.deadline|date:"M d, Y H:i" }}</span>
+                </div>
+                <div>
+                    {% if a.has_submitted %}
+                    <span class="badge submitted">Submitted</span>
+                    {% else %}
+                    <span class="badge pending">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="empty-state">No upcoming assignments.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Overdue Assignments -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Overdue Assignments</h2>
+        </div>
+        <div class="assignment-list">
+            {% for a in overdue_assignments %}
+            <div class="assignment-item">
+                <div class="assignment-item-left">
+                    <a class="assignment-item-title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+                </div>
+                <span class="badge overdue">Overdue</span>
+            </div>
+            {% empty %}
+            <p class="empty-state">No overdue assignments.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Joined Groups -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Joined Groups</h2>
+        </div>
+        <div class="course-grid">
+            {% for g in joined_groups %}
+            <span class="course-tag">{{ g.name }} &mdash; {{ g.post.title }}</span>
+            {% empty %}
+            <p class="empty-state">No groups joined.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Assignment Workspace -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Assignment Workspace</h2>
+        </div>
+        {% for post in posts %}
+        <div class="assignment-detail-card">
+            <h4>{{ post.title }}</h4>
+            <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
+            <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
+            <p><strong>Deadline:</strong> {{ post.deadline|date:"M d, Y H:i" }}</p>
+            <p>
+                <strong>Status:</strong>
+                <span class="badge {{ post.status_class }}">{{ post.user_status }}</span>
+            </p>
+            {% if post.user_group %}
+            <p><strong>Group:</strong> {{ post.user_group }}</p>
+            {% endif %}
+            <div class="actions">
+                <a class="btn btn-primary" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="empty-state">No assignments found.</p>
+        {% endfor %}
+    </div>
+
     {% endif %}
 </div>
 {% endblock %}

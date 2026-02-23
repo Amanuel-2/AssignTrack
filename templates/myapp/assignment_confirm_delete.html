@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>Delete Assignment</h2>
-    <p>Are you sure you want to delete <strong>{{ post.title }}</strong>?</p>
-
-    <form method="post">
-        {% csrf_token %}
-        <button class="btn btn-danger" type="submit">Yes, Delete</button>
-        <a class="btn btn-secondary" href="{% url 'assignment_detail' post.id %}">Cancel</a>
-    </form>
+<div class="page-container">
+    <div class="section-card" style="max-width: 520px; margin: 0 auto;">
+        <div class="section-header">
+            <h2 class="section-title">Delete Assignment</h2>
+        </div>
+        <p style="margin-bottom: 6px;">Are you sure you want to delete:</p>
+        <p style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 24px;">
+            &ldquo;{{ post.title }}&rdquo;
+        </p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">
+            This action cannot be undone. All submissions and groups linked to this assignment will also be removed.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="actions" style="margin-top: 0;">
+                <button class="btn btn-danger" type="submit">Yes, Delete</button>
+                <a class="btn btn-secondary" href="{% url 'assignment_detail' post.id %}">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

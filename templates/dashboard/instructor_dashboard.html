@@ -1,60 +1,99 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>Instructor Dashboard</h2>
+<div class="page-container">
     {% if forbidden %}
     <p class="error-text">Only instructors can access this dashboard.</p>
     {% else %}
-    <p>
-        <a class="btn btn-primary" href="{% url 'instructor_assignment_create' %}">
-            Create Assignment
-        </a>
-    </p>
 
-    <h3>Courses You Teach</h3>
-    <ul>
-        {% for c in courses %}
-        <li>{{ c.name }}</li>
-        {% empty %}
-        <li>No courses assigned</li>
-        {% endfor %}
-    </ul>
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Instructor Dashboard</h1>
+            <p class="dashboard-subtitle">Manage your courses, assignments, and student submissions.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'instructor_assignment_create' %}">+ Create Assignment</a>
+    </div>
 
-    
-<h3>Assignments You Created</h3>
-<ul>
-    {% for a in assignments %}
-    <li>
-        <!-- Make the title clickable -->
-        <a href="{% url 'assignment_review' a.id %}">{{ a.title }}</a>
-        {% if a.course %} ({{ a.course.name }}){% endif %}
-        <a class="btn btn-secondary" href="{% url 'assignment_edit' a.id %}">Edit</a>
-        <a class="btn btn-danger" href="{% url 'assignment_delete' a.id %}">Delete</a>
-    </li>
-    {% empty %}
-    <li>No assignments created</li>
-    {% endfor %}
-</ul>
+    <!-- Courses You Teach -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Courses You Teach</h2>
+        </div>
+        <div class="course-grid">
+            {% for c in courses %}
+            <span class="course-tag">{{ c.name }}</span>
+            {% empty %}
+            <p class="empty-state">No courses assigned yet.</p>
+            {% endfor %}
+        </div>
+    </div>
 
+    <!-- Assignments You Created -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Assignments You Created</h2>
+        </div>
+        <div class="assignment-list">
+            {% for a in assignments %}
+            <div class="assignment-item">
+                <div class="assignment-item-left">
+                    <a class="assignment-item-title" href="{% url 'assignment_review' a.id %}">{{ a.title }}</a>
+                    {% if a.course %}
+                    <span class="assignment-course">{{ a.course.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="assignment-item-actions">
+                    <a class="btn btn-sm btn-secondary" href="{% url 'assignment_edit' a.id %}">Edit</a>
+                    <a class="btn btn-sm btn-danger" href="{% url 'assignment_delete' a.id %}">Delete</a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="empty-state">No assignments created yet.</p>
+            {% endfor %}
+        </div>
+    </div>
 
-    <h3>Student Submissions</h3>
-    <ul>
-        {% for s in submissions %}
-        <li>{{ s.student.username }} submitted {{ s.post.title }} at {{ s.submitted_at|date:"Y-m-d H:i" }}</li>
-        {% empty %}
-        <li>No submissions yet</li>
-        {% endfor %}
-    </ul>
+    <!-- Student Submissions -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Student Submissions</h2>
+        </div>
+        <div class="row-list">
+            {% for s in submissions %}
+            <a class="submission-row" href="{% url 'assignment_review' s.post.id %}">
+                <div class="submission-left">
+                    <span class="submission-student">{{ s.student.username }}</span>
+                    <span class="submission-title">{{ s.post.title }}</span>
+                </div>
+                <span class="submission-date">{{ s.submitted_at|date:"M d, Y · H:i" }}</span>
+            </a>
+            {% empty %}
+            <p class="empty-state">No submissions yet.</p>
+            {% endfor %}
+        </div>
+    </div>
 
-    <h3>Group Management</h3>
-    <ul>
-        {% for g in groups %}
-        <li>{{ g.post.title }} - {{ g.name }} ({{ g.members.count }} members)</li>
-        {% empty %}
-        <li>No groups yet</li>
-        {% endfor %}
-    </ul>
+    <!-- Group Management -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Group Management</h2>
+        </div>
+        <div class="row-list">
+            {% for g in groups %}
+            <a class="group-row" href="{% url 'assignment_review' g.post.id %}">
+                <div class="group-left">
+                    <span class="group-assignment">{{ g.post.title }}</span>
+                    <span class="group-name">{{ g.name }}</span>
+                </div>
+                <span class="member-badge">{{ g.members.count }} members</span>
+            </a>
+            {% empty %}
+            <p class="empty-state">No groups yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
     {% endif %}
 </div>
 {% endblock %}

@@ -1,86 +1,127 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>{{ post.title }}</h2>
-    <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
-    <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
-    <p><strong>Description:</strong></p>
-    <p>{{ post.content }}</p>
-    <p><strong>Deadline:</strong> {{ post.deadline }}</p>
-    <p><strong>Created At:</strong> {{ post.created_at }}</p>
+<div class="page-container">
 
-    {% if post.attachment %}
-    <a href="{{ post.attachment.url }}" download class="btn btn-download">Download Assignment</a>
-    {% endif %}
-</div>
-
-<div class="assignment-card">
-    <h3>Group Information</h3>
-    <p><strong>Group Type:</strong> {{ post.get_group_type_display }}</p>
-    {% if group %}
-    <p><strong>Your Group:</strong> {{ group.name }}</p>
-    {% else %}
-    <p><strong>Your Group:</strong> Not joined</p>
-    {% endif %}
-</div>
-
-{% if post.group_type == "manual" %}
-<div class="assignment-card">
-    <h3>Available Groups</h3>
-    <form id="csrf-form" style="display:none;">{% csrf_token %}</form>
-
-    {% for g in groups %}
-    <div id="group-{{ g.id }}" class="group-box">
-        <p><strong>{{ g.name }}</strong></p>
-        <p>
-            Members:
-            <span id="count-{{ g.id }}">{{ g.members.count }}</span>
-            {% if post.max_students_per_group %}/ {{ post.max_students_per_group }}{% endif %}
-        </p>
-
-        {% if group and group.id == g.id %}
-        <span class="badge submitted">You are in this group</span>
-        {% elif post.max_students_per_group and g.members.count >= post.max_students_per_group %}
-        <button type="button" class="btn btn-disabled" disabled>Group Full</button>
-        {% elif not group %}
-        <button type="button" class="btn btn-primary" id="join-btn-{{ g.id }}" onclick="joinGroup({{ g.id }})">Join Group</button>
+    <!-- Assignment Info -->
+    <div class="section-card">
+        <h2>{{ post.title }}</h2>
+        <div class="profile-detail-row">
+            <span class="profile-label">Course</span>
+            <span class="profile-value">{{ post.course.name|default:"Not assigned" }}</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Instructor</span>
+            <span class="profile-value">{{ post.author.get_full_name|default:post.author.username }}</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Deadline</span>
+            <span class="profile-value">{{ post.deadline }}</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Created</span>
+            <span class="profile-value">{{ post.created_at }}</span>
+        </div>
+        <div class="profile-detail-row" style="flex-direction: column; gap: 8px;">
+            <span class="profile-label">Description</span>
+            <span class="profile-value">{{ post.content }}</span>
+        </div>
+        {% if post.attachment %}
+        <div class="actions">
+            <a href="{{ post.attachment.url }}" download class="btn btn-download">Download Assignment</a>
+        </div>
         {% endif %}
     </div>
-    {% empty %}
-    <p>No groups available yet.</p>
-    {% endfor %}
-</div>
-{% endif %}
 
-<div class="assignment-card">
-    <h3>Submission</h3>
-    {% if submission %}
-    <p>
-        <strong>Status:</strong>
-        <span class="badge submitted">Submitted</span>
-    </p>
-    <p><strong>Submitted At:</strong> {{ submission.submitted_at }}</p>
-    <a href="{{ submission.file.url }}" download class="btn btn-download">Download Your Submission</a>
-    {% else %}
-    {% if post.is_overdue %}
-    <p><strong>Status:</strong> <span class="badge overdue">Overdue</span></p>
-    {% else %}
-    <p><strong>Status:</strong> <span class="badge pending">Pending</span></p>
+    <!-- Group Information -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Group Information</h2>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Group Type</span>
+            <span class="profile-value">{{ post.get_group_type_display }}</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Your Group</span>
+            <span class="profile-value">
+                {% if group %}{{ group.name }}{% else %}Not joined{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Available Groups (manual only) -->
+    {% if post.group_type == "manual" %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Available Groups</h2>
+        </div>
+        <form id="csrf-form" style="display:none;">{% csrf_token %}</form>
+
+        {% for g in groups %}
+        <div id="group-{{ g.id }}" class="group-box">
+            <p><strong>{{ g.name }}</strong></p>
+            <p>
+                Members:
+                <span id="count-{{ g.id }}">{{ g.members.count }}</span>
+                {% if post.max_students_per_group %}/ {{ post.max_students_per_group }}{% endif %}
+            </p>
+
+            {% if group and group.id == g.id %}
+            <span class="badge submitted">You are in this group</span>
+            {% elif post.max_students_per_group and g.members.count >= post.max_students_per_group %}
+            <button type="button" class="btn btn-disabled" disabled>Group Full</button>
+            {% elif not group %}
+            <button type="button" class="btn btn-primary btn-sm" id="join-btn-{{ g.id }}" onclick="joinGroup({{ g.id }})">Join Group</button>
+            {% endif %}
+        </div>
+        {% empty %}
+        <p class="empty-state">No groups available yet.</p>
+        {% endfor %}
+    </div>
     {% endif %}
 
-    {% if submit_error %}
-    <p class="error-text">{{ submit_error }}</p>
-    {% endif %}
+    <!-- Submission -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Submission</h2>
+        </div>
+        {% if submission %}
+        <div class="profile-detail-row">
+            <span class="profile-label">Status</span>
+            <span class="badge submitted">Submitted</span>
+        </div>
+        <div class="profile-detail-row">
+            <span class="profile-label">Submitted At</span>
+            <span class="profile-value">{{ submission.submitted_at }}</span>
+        </div>
+        <div class="actions">
+            <a href="{{ submission.file.url }}" download class="btn btn-download">Download Your Submission</a>
+        </div>
+        {% else %}
+        <div class="profile-detail-row">
+            <span class="profile-label">Status</span>
+            {% if post.is_overdue %}
+            <span class="badge overdue">Overdue</span>
+            {% else %}
+            <span class="badge pending">Pending</span>
+            {% endif %}
+        </div>
 
-    {% if can_submit %}
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button class="btn btn-primary" type="submit">Upload Submission</button>
-    </form>
-    {% endif %}
-    {% endif %}
+        {% if submit_error %}
+        <p class="error-text">{{ submit_error }}</p>
+        {% endif %}
+
+        {% if can_submit %}
+        <form method="post" enctype="multipart/form-data" style="margin-top: 16px;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary" type="submit">Upload Submission</button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+
 </div>
 
 <script>

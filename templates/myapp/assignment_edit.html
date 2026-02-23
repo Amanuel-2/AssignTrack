@@ -1,15 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>Edit Assignment</h2>
-    <p><strong>Assignment:</strong> {{ post.title }}</p>
+<div class="page-container">
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Edit Assignment</h1>
+            <p class="dashboard-subtitle">{{ post.title }}</p>
+        </div>
+    </div>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button class="btn btn-primary" type="submit">Save Changes</button>
-        <a class="btn btn-secondary" href="{% url 'assignment_detail' post.id %}">Cancel</a>
-    </form>
+    <div class="section-card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions" style="margin-top: 24px;">
+                <button class="btn btn-primary" type="submit">Save Changes</button>
+                <a class="btn btn-secondary" href="{% url 'assignment_detail' post.id %}">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

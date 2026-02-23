@@ -1,16 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="assignment-card">
-    <h2>Create Assignment</h2>
-    <p>Select from demo Computer Science courses.</p>
+<div class="page-container">
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Create Assignment</h1>
+            <p class="dashboard-subtitle">Fill in the details below to publish a new assignment.</p>
+        </div>
+    </div>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button class="btn btn-primary" type="submit">Create</button>
-        <a class="btn btn-secondary" href="{% url 'instructor_dashboard' %}">Back</a>
-    </form>
+    <div class="section-card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions" style="margin-top: 24px;">
+                <button class="btn btn-primary" type="submit">Create Assignment</button>
+                <a class="btn btn-secondary" href="{% url 'instructor_dashboard' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
-

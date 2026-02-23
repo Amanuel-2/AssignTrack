@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <title>AssignTrack</title>
     <meta charset="UTF-8">
     {% load static %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
 </head>
 
@@ -17,7 +20,7 @@
             <a href="{% url 'home' %}">Home</a>
             {% if user.is_authenticated %}
                 {% if user.profile.role == "lecturer" %}
-                    <a href="{% url 'instructor_dashboard' %}">Instructor Dashboard</a>
+                    <a href="{% url 'instructor_dashboard' %}">Dashboard</a>
                 {% elif user.profile.role == "student" %}
                     <a href="{% url 'dashboard' %}">Dashboard</a>
                 {% else %}
@@ -31,7 +34,7 @@
         </div>
         {% if user.is_authenticated %}
         <div class="nav-right">
-            <span>Welcome {{ user.username }}</span>
+            <span>{{ user.username }}</span>
             <a href="{% url 'logout' %}">Logout</a>
         </div>
         {% endif %}
