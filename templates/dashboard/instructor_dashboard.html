@@ -21,18 +21,22 @@
         {% endfor %}
     </ul>
 
-    <h3>Assignments You Created</h3>
-    <ul>
-        {% for a in assignments %}
-        <li>
-            {{ a.title }}{% if a.course %} ({{ a.course.name }}){% endif %}
-            <a class="btn btn-secondary" href="{% url 'assignment_edit' a.id %}">Edit</a>
-            <a class="btn btn-danger" href="{% url 'assignment_delete' a.id %}">Delete</a>
-        </li>
-        {% empty %}
-        <li>No assignments created</li>
-        {% endfor %}
-    </ul>
+    
+<h3>Assignments You Created</h3>
+<ul>
+    {% for a in assignments %}
+    <li>
+        <!-- Make the title clickable -->
+        <a href="{% url 'assignment_review' a.id %}">{{ a.title }}</a>
+        {% if a.course %} ({{ a.course.name }}){% endif %}
+        <a class="btn btn-secondary" href="{% url 'assignment_edit' a.id %}">Edit</a>
+        <a class="btn btn-danger" href="{% url 'assignment_delete' a.id %}">Delete</a>
+    </li>
+    {% empty %}
+    <li>No assignments created</li>
+    {% endfor %}
+</ul>
+
 
     <h3>Student Submissions</h3>
     <ul>

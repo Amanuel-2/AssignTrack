@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- Assignment Header -->
+    <div class="mb-4">
+        <h2>{{ assignment.title }}</h2>
+        <p><strong>Course:</strong> {{ assignment.course.name }}</p>
+        <p><strong>Due Date:</strong> {{ assignment.due_date }}</p>
+    </div>
+
+    <!-- ============================= -->
+    <!-- INDIVIDUAL ASSIGNMENT VIEW -->
+    <!-- ============================= -->
+    {% if mode == "individual" %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Student Submissions</h5>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Submission Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in review_data %}
+                        <tr>
+                            <td>{{ item.student.get_full_name|default:item.student.username }}</td>
+                            <td>{{ item.student.email }}</td>
+
+                            <!-- Status -->
+                            <td>
+                                {% if item.submitted %}
+                                    <span class="badge bg-success">Submitted</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Not Submitted</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Date -->
+                            <td>
+                                {% if item.submission %}
+                                    {{ item.submission.submitted_at }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <!-- Action -->
+                            <td>
+                                {% if item.submission and item.submission.file %}
+                                    <a href="{{ item.submission.file.url }}" class="btn btn-sm btn-outline-primary" download>
+                                        Download
+                                    </a>
+                                {% elif item.submission %}
+                                    <span class="text-muted">No file</span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                No students found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% endif %}
+
+
+    <!-- ============================= -->
+    <!-- GROUP ASSIGNMENT VIEW -->
+    <!-- ============================= -->
+    {% if mode == "group" %}
+
+        <h4 class="mb-3">Group Submissions</h4>
+
+        <div class="row">
+            {% for item in review_data %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+
+                    <!-- Group Header -->
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>{{ item.group.name }}</strong>
+
+                        {% if item.submitted %}
+                            <span class="badge bg-success">Submitted</span>
+                        {% else %}
+                            <span class="badge bg-danger">Not Submitted</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Members -->
+                    <div class="card-body">
+                        <h6>Members:</h6>
+
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member in item.members %}
+                                <tr>
+                                    <td>{{ member.get_full_name|default:member.username }}</td>
+                                    <td>{{ member.email }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        {% if item.submission %}
+                            <p class="mt-2">
+                                <strong>Submitted at:</strong>
+                                {{ item.submission.submitted_at }}
+                            </p>
+
+                            {% if item.submission.file %}
+                                <a href="{{ item.submission.file.url }}" class="btn btn-sm btn-outline-primary" download>
+                                    Download Submission
+                                </a>
+                            {% else %}
+                                <p class="text-muted mb-0">No file attached.</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+            {% empty %}
+                <p>No groups found for this assignment.</p>
+            {% endfor %}
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

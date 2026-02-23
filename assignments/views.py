@@ -14,7 +14,7 @@ from assignments.models import Post, Submission
 from assignments.serializers import AssignmentSerializer, SubmissionSerializer
 from courses.models import Course
 from groups.models import Group
-
+from accounts.models import Profile
 
 def _is_lecturer(user):
     if not user.is_authenticated or not hasattr(user, "profile"):
@@ -219,3 +219,92 @@ def assignment_delete_view(request, post_id):
         return redirect("dashboard")
 
     return render(request, "myapp/assignment_confirm_delete.html", {"post": post})
+
+@login_required
+def assignment_review_view(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+
+    # Only lecturers
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can access this page.")
+
+    # Only the author (owner)
+    if post.author != request.user:
+        return HttpResponseForbidden("You do not own this assignment.")
+
+    context = {
+        "assignment": post,
+    }
+
+    # --------------------------------
+    # INDIVIDUAL ASSIGNMENT
+    # --------------------------------
+    if post.group_type == "individual":
+
+        students = User.objects.filter(
+            profile__role="student",
+            is_active=True
+        )
+
+        review_data = []
+
+        for student in students:
+            submission = Submission.objects.filter(
+                post=post,
+                student=student
+            ).first()
+
+            review_data.append({
+                "student": student,
+                "submitted": submission is not None,
+                "submission": submission,
+            })
+
+        context["mode"] = "individual"
+        context["review_data"] = review_data
+
+    # --------------------------------
+    # GROUP ASSIGNMENT (manual/automatic)
+    # --------------------------------
+    else:
+
+        groups = Group.objects.filter(
+            post=post
+        ).prefetch_related("members")
+
+        group_review_data = []
+
+        for group in groups:
+            submission = Submission.objects.filter(
+                post=post,
+                group=group
+            ).first()
+
+            group_review_data.append({
+                "group": group,
+                "members": group.members.all(),
+                "submitted": submission is not None,
+                "submission": submission,
+            })
+
+        context["mode"] = "group"
+        context["review_data"] = group_review_data
+
+    return render(
+        request,
+        "assignments/assignment_review.html",  
+        context
+    )
+
+@login_required
+def teacher_dashboard(request):
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can access this page.")
+
+    assignments = Post.objects.filter(author=request.user)
+
+    return render(
+        request,
+        "assignments/teacher_dashboard.html",
+        {"assignments": assignments}
+    )
