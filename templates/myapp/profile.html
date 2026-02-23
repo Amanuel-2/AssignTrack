@@ -1,10 +1,118 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Profile</h2>
+<div class="assignment-card">
+    <h2>Profile</h2>
 
-<p><strong>Username:</strong> {{ user.username }}</p>
-<p><strong>Email:</strong> {{ user.email }}</p>
-<p><strong>Date Joined:</strong> {{ user.date_joined }}</p>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Date Joined:</strong> {{ user.date_joined }}</p>
+    <p><strong>Role:</strong> {{ role|default:"N/A"|title }}</p>
+
+    <div class="actions">
+        {% if role == "student" %}
+        <a class="btn btn-primary" href="{% url 'dashboard' %}">Dashboard</a>
+        {% elif role == "lecturer" %}
+        <a class="btn btn-primary" href="{% url 'instructor_dashboard' %}">Instructor Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if role == "student" %}
+<div class="assignment-card">
+    <h3>Enrolled Courses</h3>
+    <ul>
+        {% for c in enrolled_courses %}
+        <li>{{ c.name }}</li>
+        {% empty %}
+        <li>No enrolled courses</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Joined Groups</h3>
+    <ul>
+        {% for g in joined_groups %}
+        <li>{{ g.name }} ({{ g.post.title }})</li>
+        {% empty %}
+        <li>No groups joined</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Upcoming Assignments</h3>
+    <ul>
+        {% for a in upcoming_assignments %}
+        <li>
+            {{ a.title }} - {{ a.deadline|date:"Y-m-d H:i" }}
+            {% if a.has_submitted %}
+            <span class="badge submitted">Submitted</span>
+            {% else %}
+            <span class="badge pending">Pending</span>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li>No upcoming assignments</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Overdue Assignments</h3>
+    <ul>
+        {% for a in overdue_assignments %}
+        <li>{{ a.title }} - <span class="badge overdue">Overdue</span></li>
+        {% empty %}
+        <li>No overdue assignments</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Notifications</h3>
+    <ul>
+        {% for n in notifications %}
+        <li>{{ n }}</li>
+        {% empty %}
+        <li>No notifications</li>
+        {% endfor %}
+    </ul>
+</div>
+{% elif role == "lecturer" %}
+<div class="assignment-card">
+    <h3>Courses You Teach</h3>
+    <ul>
+        {% for c in courses %}
+        <li>{{ c.name }}</li>
+        {% empty %}
+        <li>No courses assigned</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Assignments You Created</h3>
+    <ul>
+        {% for a in assignments %}
+        <li>
+            <a class="assignment-link" href="{% url 'assignment_review' a.id %}">{{ a.title }}</a>
+            {% if a.course %} ({{ a.course.name }}){% endif %}
+        </li>
+        {% empty %}
+        <li>No assignments created</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Student Submissions</h3>
+    <ul>
+        {% for s in submissions %}
+        <li>{{ s.student.username }} submitted {{ s.post.title }} at {{ s.submitted_at|date:"Y-m-d H:i" }}</li>
+        {% empty %}
+        <li>No submissions yet</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Group Management</h3>
+    <ul>
+        {% for g in groups %}
+        <li>{{ g.post.title }} - {{ g.name }} ({{ g.members.count }} members)</li>
+        {% empty %}
+        <li>No groups yet</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 
 {% endblock %}

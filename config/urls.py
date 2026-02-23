@@ -19,7 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from django.http import JsonResponse
-from dashboard.views import dashboard_view
+from dashboard.views import dashboard_view, home_view
 
 
 def api_root(request):
@@ -37,6 +37,7 @@ def api_root(request):
     )
 
 urlpatterns = [
+    path('', home_view, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('api/', api_root, name='api_root'),

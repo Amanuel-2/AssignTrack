@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="home-hero">
+    <h1>Assignment Management System</h1>
+    <p>
+        A simple platform for instructors to create assignments and for students
+        to submit and track their work.
+    </p>
+    <div class="actions">
+        {% if user.is_authenticated %}
+            {% if role == "lecturer" %}
+                <a class="btn btn-primary" href="{% url 'instructor_dashboard' %}">Go to Dashboard</a>
+            {% else %}
+                <a class="btn btn-primary" href="{% url 'dashboard' %}">Go to Dashboard</a>
+            {% endif %}
+        {% else %}
+            <a class="btn btn-primary" href="{% url 'login' %}">Login</a>
+            <a class="btn btn-secondary" href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="home-section">
+    <h2>Features</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>For Instructors</h3>
+            <ul>
+                <li>Create assignments</li>
+                <li>Edit and delete assignments</li>
+                <li>Review submissions</li>
+                <li>Manage courses</li>
+                <li>View student submissions</li>
+            </ul>
+        </div>
+        <div class="feature-card">
+            <h3>For Students</h3>
+            <ul>
+                <li>View assignments</li>
+                <li>Submit work</li>
+                <li>Track submission status</li>
+                <li>Join groups</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="home-section">
+    <h2>Role-Based Dashboards</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>Instructor Dashboard</h3>
+            <p>Create and manage assignments, review submissions, and organize groups.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Student Profile</h3>
+            <p>Track courses, joined groups, deadlines, and notifications from profile.</p>
+        </div>
+    </div>
+</section>
+
+<section class="home-section">
+    <h2>Platform Snapshot</h2>
+    <div class="stats-row">
+        <div class="stat-card">
+            <strong>20+</strong>
+            <span>Assignments Created</span>
+        </div>
+        <div class="stat-card">
+            <strong>2 Roles</strong>
+            <span>Student and Instructor</span>
+        </div>
+        <div class="stat-card">
+            <strong>100%</strong>
+            <span>Role-Based Navigation</span>
+        </div>
+    </div>
+</section>
+
+<footer class="home-footer">
+    <p>AssignTrack | Built for assignment and submission management.</p>
+</footer>
+{% endblock %}

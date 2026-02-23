@@ -57,6 +57,28 @@
         <li>No notifications</li>
         {% endfor %}
     </ul>
+
+    <h3>Assignment Workspace</h3>
+    {% for post in posts %}
+    <div class="assignment-card">
+        <h4>{{ post.title }}</h4>
+        <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
+        <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
+        <p><strong>Deadline:</strong> {{ post.deadline|date:"M d, Y H:i" }}</p>
+        <p>
+            <strong>Status:</strong>
+            <span class="badge {{ post.status_class }}">{{ post.user_status }}</span>
+        </p>
+        {% if post.user_group %}
+        <p><strong>Group:</strong> {{ post.user_group }}</p>
+        {% endif %}
+        <div class="actions">
+            <a class="btn btn-primary" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+        </div>
+    </div>
+    {% empty %}
+    <p>No assignments found.</p>
+    {% endfor %}
     {% endif %}
 </div>
 {% endblock %}

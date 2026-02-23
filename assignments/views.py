@@ -25,19 +25,17 @@ def _is_lecturer(user):
 DEMO_CS_COURSES = [
     "Introduction to Computer Science",
     "Data Structures",
-    "Algorithms",
-    "Database Systems",
-    "Operating Systems",
-    "Computer Networks",
-    "Software Engineering",
-    "Web Development",
 ]
 
 
 def _ensure_demo_cs_courses(lecturer):
+    existing_courses = Course.objects.filter(lecturer=lecturer).order_by("name")
+    if existing_courses.exists():
+        return existing_courses
+
     for name in DEMO_CS_COURSES:
         Course.objects.get_or_create(name=name, lecturer=lecturer)
-    return Course.objects.filter(lecturer=lecturer, name__in=DEMO_CS_COURSES).order_by("name")
+    return Course.objects.filter(lecturer=lecturer).order_by("name")
 
 
 def _create_groups_for_post(post):
