@@ -13,6 +13,7 @@
 
     <nav class="nav-bar">
         <div class="nav-left">
+            <a class="brand" href="{% url 'home' %}">AssignTrack</a>
             <a href="{% url 'home' %}">Home</a>
             {% if user.is_authenticated %}
                 {% if user.profile.role == "lecturer" %}
@@ -36,10 +37,10 @@
         {% endif %}
     </nav>
 
-    <hr>
-
-    {% block content %}
-    {% endblock %}
+    <main class="page-shell">
+        {% block content %}
+        {% endblock %}
+    </main>
 
 </body>
 
