@@ -29,20 +29,6 @@
         </div>
     </div>
 
-    <!-- Enrolled Courses -->
-    <div class="section-card">
-        <div class="section-header">
-            <h2 class="section-title">Enrolled Courses</h2>
-        </div>
-        <div class="course-grid">
-            {% for c in enrolled_courses %}
-            <span class="course-tag">{{ c.name }}</span>
-            {% empty %}
-            <p class="empty-state">No enrolled courses.</p>
-            {% endfor %}
-        </div>
-    </div>
-
     <!-- Notifications -->
     {% if notifications %}
     <div class="section-card">
@@ -57,14 +43,41 @@
     </div>
     {% endif %}
 
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Find Assignments</h2>
+        </div>
+        <div class="assignment-tools">
+            <div class="assignment-search">
+                <span class="assignment-search__icon" aria-hidden="true">&#128269;</span>
+                <input type="search" data-asgn-search placeholder="Search by assignment title or course name">
+            </div>
+            <div class="assignment-filters">
+                <button type="button" class="assignment-filter is-active" data-asgn-filter="all">All</button>
+                <button type="button" class="assignment-filter" data-asgn-filter="individual">Individual</button>
+                <button type="button" class="assignment-filter" data-asgn-filter="group">Group</button>
+                <button type="button" class="assignment-filter" data-asgn-filter="completed">Completed</button>
+                <button type="button" class="assignment-filter" data-asgn-filter="uncompleted">Uncompleted</button>
+                <button type="button" class="assignment-filter" data-asgn-filter="active">Active</button>
+                <button type="button" class="assignment-filter" data-asgn-filter="closed">Closed</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Upcoming Assignments -->
     <div class="section-card">
         <div class="section-header">
             <h2 class="section-title">Upcoming Assignments</h2>
         </div>
-        <div class="assignment-cards-grid">
+        <div class="assignment-cards-grid js-asgn-grid">
             {% for a in upcoming_assignments %}
-            <div class="asgn-card">
+            <a class="asgn-card asgn-card--link js-asgn-card"
+               href="{% url 'assignment_detail' a.id %}"
+               data-title="{{ a.title|lower }}"
+               data-course="{{ a.course.name|default:'No Course'|lower }}"
+               data-kind="{% if a.group_type == 'individual' %}individual{% else %}group{% endif %}"
+               data-completed="{% if a.has_submitted %}true{% else %}false{% endif %}"
+               data-state="active">
                 <!-- Course + Status -->
                 <div class="asgn-card__top">
                     <span class="asgn-card__course-tag">{{ a.course.name|default:"No Course" }}</span>
@@ -76,7 +89,7 @@
                 </div>
 
                 <!-- Title -->
-                <a class="asgn-card__title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+                <span class="asgn-card__title">{{ a.title }}</span>
 
                 <!-- Description -->
                 <p class="asgn-card__desc">{{ a.content|default:"No description provided."|truncatewords:20 }}</p>
@@ -92,16 +105,16 @@
                     <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
                 </div>
 
-                <!-- Footer: deadline + action -->
+                <!-- Footer -->
                 <div class="asgn-card__footer">
                     <span class="asgn-card__deadline-text">&#128197; {{ a.deadline|date:"M d, Y H:i" }}</span>
-                    <a class="btn btn-primary btn-sm" href="{% url 'assignment_detail' a.id %}">View</a>
                 </div>
-            </div>
+            </a>
             {% empty %}
             <p class="empty-state">No upcoming assignments.</p>
             {% endfor %}
         </div>
+        <p class="empty-state js-filter-empty" hidden>No assignments match the current filters.</p>
     </div>
 
     <!-- Overdue Assignments -->
@@ -109,9 +122,15 @@
         <div class="section-header">
             <h2 class="section-title">Overdue Assignments</h2>
         </div>
-        <div class="assignment-cards-grid">
+        <div class="assignment-cards-grid js-asgn-grid">
             {% for a in overdue_assignments %}
-            <div class="asgn-card">
+            <a class="asgn-card asgn-card--link js-asgn-card"
+               href="{% url 'assignment_detail' a.id %}"
+               data-title="{{ a.title|lower }}"
+               data-course="{{ a.course.name|default:'No Course'|lower }}"
+               data-kind="{% if a.group_type == 'individual' %}individual{% else %}group{% endif %}"
+               data-completed="{% if a.has_submitted %}true{% else %}false{% endif %}"
+               data-state="closed">
                 <!-- Course + Status -->
                 <div class="asgn-card__top">
                     <span class="asgn-card__course-tag">{{ a.course.name|default:"No Course" }}</span>
@@ -123,7 +142,7 @@
                 </div>
 
                 <!-- Title -->
-                <a class="asgn-card__title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+                <span class="asgn-card__title">{{ a.title }}</span>
 
                 <!-- Description -->
                 <p class="asgn-card__desc">{{ a.content|default:"No description provided."|truncatewords:20 }}</p>
@@ -139,16 +158,16 @@
                     <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
                 </div>
 
-                <!-- Footer: deadline + action -->
+                <!-- Footer -->
                 <div class="asgn-card__footer">
                     <span class="asgn-card__deadline-text">&#128197; {{ a.deadline|date:"M d, Y H:i" }}</span>
-                    <a class="btn btn-secondary btn-sm" href="{% url 'assignment_detail' a.id %}">View</a>
                 </div>
-            </div>
+            </a>
             {% empty %}
             <p class="empty-state">No overdue assignments.</p>
             {% endfor %}
         </div>
+        <p class="empty-state js-filter-empty" hidden>No assignments match the current filters.</p>
     </div>
 
     <!-- Joined Groups -->
@@ -170,9 +189,15 @@
         <div class="section-header">
             <h2 class="section-title">Assignment Workspace</h2>
         </div>
-        <div class="assignment-cards-grid">
+        <div class="assignment-cards-grid js-asgn-grid">
             {% for post in posts %}
-            <div class="asgn-card">
+            <a class="asgn-card asgn-card--link js-asgn-card"
+               href="{% url 'assignment_detail' post.id %}"
+               data-title="{{ post.title|lower }}"
+               data-course="{{ post.course.name|default:'No Course'|lower }}"
+               data-kind="{% if post.group_type == 'individual' %}individual{% else %}group{% endif %}"
+               data-completed="{% if post.user_status == 'Submitted' %}true{% else %}false{% endif %}"
+               data-state="{% if post.is_overdue %}closed{% else %}active{% endif %}">
                 <!-- Course + Status -->
                 <div class="asgn-card__top">
                     <span class="asgn-card__course-tag">{{ post.course.name|default:"No Course" }}</span>
@@ -180,7 +205,7 @@
                 </div>
 
                 <!-- Title -->
-                <a class="asgn-card__title" href="{% url 'assignment_detail' post.id %}">{{ post.title }}</a>
+                <span class="asgn-card__title">{{ post.title }}</span>
 
                 <!-- Description -->
                 <p class="asgn-card__desc">{{ post.content|default:"No description provided."|truncatewords:20 }}</p>
@@ -196,7 +221,7 @@
                     <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
                 </div>
 
-                <!-- Footer: deadline + instructor + action -->
+                <!-- Footer: deadline + instructor -->
                 <div class="asgn-card__footer">
                     <div class="asgn-card__meta">
                         <span class="asgn-card__deadline-text">&#128197; {{ post.deadline|date:"M d, Y H:i" }}</span>
@@ -205,13 +230,13 @@
                         <span class="text-muted">{{ post.user_group }}</span>
                         {% endif %}
                     </div>
-                    <a class="btn btn-primary btn-sm" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
                 </div>
-            </div>
+            </a>
             {% empty %}
             <p class="empty-state">No assignments found.</p>
             {% endfor %}
         </div>
+        <p class="empty-state js-filter-empty" hidden>No assignments match the current filters.</p>
     </div>
 
     {% endif %}
@@ -220,7 +245,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var widgets = document.querySelectorAll('.js-deadline-widget');
-    if (!widgets.length) return;
 
     function updateWidget(widget) {
         var iso = widget.getAttribute('data-deadline');
@@ -275,8 +299,63 @@ document.addEventListener('DOMContentLoaded', function () {
         widgets.forEach(updateWidget);
     }
 
-    tick();
-    setInterval(tick, 60000);
+    if (widgets.length) {
+        tick();
+        setInterval(tick, 60000);
+    }
+
+    var searchInput = document.querySelector('[data-asgn-search]');
+    var filterButtons = document.querySelectorAll('[data-asgn-filter]');
+    var cards = document.querySelectorAll('.js-asgn-card');
+    var grids = document.querySelectorAll('.js-asgn-grid');
+    var activeFilter = 'all';
+
+    function matchesFilter(card, filterName) {
+        if (filterName === 'all') return true;
+        if (filterName === 'individual') return card.dataset.kind === 'individual';
+        if (filterName === 'group') return card.dataset.kind === 'group';
+        if (filterName === 'completed') return card.dataset.completed === 'true';
+        if (filterName === 'uncompleted') return card.dataset.completed === 'false';
+        if (filterName === 'active') return card.dataset.state === 'active';
+        if (filterName === 'closed') return card.dataset.state === 'closed';
+        return true;
+    }
+
+    function applyAssignmentFilters() {
+        var searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+        cards.forEach(function (card) {
+            var title = card.dataset.title || '';
+            var course = card.dataset.course || '';
+            var searchMatch = !searchTerm || title.indexOf(searchTerm) !== -1 || course.indexOf(searchTerm) !== -1;
+            var filterMatch = matchesFilter(card, activeFilter);
+            card.style.display = (searchMatch && filterMatch) ? '' : 'none';
+        });
+
+        grids.forEach(function (grid) {
+            var visibleCount = Array.from(grid.querySelectorAll('.js-asgn-card'))
+                .filter(function (card) { return card.style.display !== 'none'; }).length;
+            var emptyForFilter = grid.parentElement.querySelector('.js-filter-empty');
+            if (emptyForFilter) {
+                emptyForFilter.hidden = visibleCount !== 0;
+            }
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyAssignmentFilters);
+    }
+
+    filterButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            activeFilter = button.getAttribute('data-asgn-filter') || 'all';
+            filterButtons.forEach(function (b) { b.classList.remove('is-active'); });
+            button.classList.add('is-active');
+            applyAssignmentFilters();
+        });
+    });
+
+    applyAssignmentFilters();
 });
 </script>
 {% endblock %}
