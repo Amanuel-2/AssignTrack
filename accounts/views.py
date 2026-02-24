@@ -50,7 +50,6 @@ def profile_view(request):
         assignments = Post.objects.select_related("course", "author").order_by("deadline")
         submissions = Submission.objects.filter(student=request.user).select_related("post")
         joined_groups = Group.objects.filter(members=request.user).select_related("post")
-        enrolled_courses = Course.objects.filter(student=request.user)
 
         submitted_post_ids = {s.post_id for s in submissions}
         for assignment in assignments:
@@ -65,7 +64,6 @@ def profile_view(request):
 
         context.update(
             {
-                "enrolled_courses": enrolled_courses,
                 "joined_groups": joined_groups,
                 "upcoming_assignments": upcoming_assignments,
                 "overdue_assignments": overdue_assignments,

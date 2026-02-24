@@ -341,8 +341,9 @@ button[type="submit"].btn-primary:hover {
 
 .badge.submitted,
 .badge.bg-success {
-  background: var(--success-bg);
+  background: rgba(34, 197, 94, 0.22);
   color: var(--success);
+  border: 1px solid rgba(34, 197, 94, 0.45);
 }
 
 .badge.pending {
@@ -526,6 +527,11 @@ button[type="submit"].btn-primary:hover {
 
 .asgn-card--link:hover .asgn-card__title {
   color: var(--accent);
+}
+
+.asgn-card[data-completed="true"] {
+  background: #171f1a;
+  border-color: rgba(34, 197, 94, 0.28);
 }
 
 /* Top row: course tag + status badge */
@@ -755,8 +761,8 @@ button[type="submit"].btn-primary:hover {
 }
 
 .dashboard-profile-card__avatar {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--border-hover);
@@ -1228,8 +1234,8 @@ form .help-text {
 }
 
 .profile-avatar {
-  width: 60px;
-  height: 60px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   background: var(--accent-dim);
   color: var(--accent);
@@ -1244,8 +1250,8 @@ form .help-text {
 
 .profile-avatar-wrap {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 68px;
+  height: 68px;
   flex-shrink: 0;
 }
 
@@ -1791,6 +1797,80 @@ form .help-text {
   color: var(--text-secondary);
 }
 
+.gm-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.gm-breadcrumb a {
+  color: var(--accent);
+}
+
+.gm-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.gm-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.gm-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.gm-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.gm-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.gm-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.gm-card__header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.gm-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+}
+
+.gm-card--placeholder {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 /* ============================================================
    UTILITY
    ============================================================ */
@@ -1871,6 +1951,11 @@ form .help-text {
     grid-template-columns: 1fr;
   }
 
+  .gm-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1920,11 +2005,19 @@ form .help-text {
   .assignment-cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .gm-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* lg: 3 columns */
 @media (min-width: 1200px) {
   .assignment-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gm-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

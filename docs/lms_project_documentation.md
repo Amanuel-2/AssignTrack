@@ -148,7 +148,7 @@ class Course(models.Model):
 
 ### Relationships
 - One lecturer can own many courses (`Course.lecturer`).
-- Many students can be enrolled in many courses (`Course.student` M2M).
+- Many students can be linked to many courses (`Course.student` M2M).
 
 ### Course Creation
 - Via API endpoint in `courses.views.CourseListCreateView`.
@@ -273,11 +273,9 @@ assignments = Post.objects.select_related("course", "author").annotate(
 Plus:
 - `submissions = Submission.objects.filter(student=request.user)`
 - `joined_groups = Group.objects.filter(members=request.user)`
-- `enrolled_courses = Course.objects.filter(student=request.user)`
 - `notifications` generated from nearest upcoming deadlines.
 
 ### Student Dashboard Context
-- `enrolled_courses`
 - `joined_groups`
 - `upcoming_assignments`
 - `overdue_assignments`
@@ -342,7 +340,7 @@ path('api/', include('myapp.urls'))  # legacy/compat endpoints
 auth_user (Django User)
   1 --- 1  Profile
   1 --- *  Course (as lecturer)
-  * --- *  Course (as enrolled student via Course.student)
+  * --- *  Course (as student via Course.student)
   1 --- *  Post (as author/lecturer)
   * --- *  Group (via Group.members)
   1 --- *  Submission (as student)
@@ -399,4 +397,3 @@ Submission
   - `groups/models.py`
 - Add migration plan with data-safe model moves.
 - Remove `myapp` compatibility wrappers once all imports and URLs are fully migrated.
-

@@ -26,22 +26,32 @@
                 <thead>
                     <tr>
                         <th>Student Name</th>
-                        <th>Email</th>
                         <th>Status</th>
+                        <th>Submitted Link</th>
                         <th>Submission Date</th>
-                        <th>Action</th>
+                        <th>File</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in review_data %}
                     <tr>
                         <td><strong>{{ item.student.get_full_name|default:item.student.username }}</strong></td>
-                        <td>{{ item.student.email }}</td>
                         <td>
                             {% if item.submitted %}
                             <span class="badge submitted">Submitted</span>
                             {% else %}
                             <span class="badge overdue">Not Submitted</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.submission and item.submission.submission_link %}
+                            <a href="{{ item.submission.submission_link }}" class="assignment-link" target="_blank" rel="noopener noreferrer">
+                                Open Submitted Link
+                            </a>
+                            {% elif item.submission %}
+                            <span class="text-muted">No link</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
                             {% endif %}
                         </td>
                         <td>
@@ -116,7 +126,24 @@
 
                 {% if item.submission %}
                 <p class="submission-info-text">
+                    <strong>Submitted by:</strong> {{ item.submission.student.get_full_name|default:item.submission.student.username }}
+                </p>
+                <p class="submission-info-text">
                     <strong>Submitted at:</strong> {{ item.submission.submitted_at|date:"M d, Y H:i" }}
+                </p>
+                <p class="submission-info-text">
+                    <strong>Status:</strong>
+                    <span class="badge submitted">Submitted</span>
+                </p>
+                <p class="submission-info-text">
+                    <strong>Submitted Link:</strong>
+                    {% if item.submission.submission_link %}
+                    <a href="{{ item.submission.submission_link }}" class="assignment-link" target="_blank" rel="noopener noreferrer">
+                        Open Submitted Link
+                    </a>
+                    {% else %}
+                    <span class="text-muted">No link</span>
+                    {% endif %}
                 </p>
                 {% if item.submission.file %}
                 <div class="actions">
@@ -127,6 +154,10 @@
                 {% else %}
                 <p class="submission-info-text">No file attached.</p>
                 {% endif %}
+                {% else %}
+                <p class="submission-info-text">
+                    <strong>Status:</strong> <span class="badge overdue">Not Submitted</span>
+                </p>
                 {% endif %}
             </div>
         </div>

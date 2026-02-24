@@ -160,6 +160,7 @@ def assignment_detail_view(request, post_id):
                 new_submission = form.save(commit=False)
                 new_submission.post = post
                 new_submission.student = user
+                new_submission.submission_link = form.cleaned_data.get("submission_link")
 
                 if post.group_type == "individual":
                     individual_group, _ = Group.objects.get_or_create(post=post, name=f"{user.username}-individual")
@@ -293,6 +294,49 @@ def assignment_review_view(request, pk):
         "assignments/assignment_review.html",  
         context
     )
+
+
+@login_required
+def group_submission_detail_view(request, post_id, group_id):
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can access this page.")
+
+    post = get_object_or_404(Post, id=post_id)
+    if post.author != request.user:
+        return HttpResponseForbidden("You do not own this assignment.")
+
+    group = get_object_or_404(
+        Group.objects.prefetch_related("members"),
+        id=group_id,
+        post=post,
+    )
+
+    members = list(group.members.all().order_by("username"))
+    member_ids = [member.id for member in members]
+    submissions = Submission.objects.filter(
+        post=post,
+        group=group,
+        student_id__in=member_ids,
+    ).select_related("student")
+    submission_by_student = {submission.student_id: submission for submission in submissions}
+
+    rows = []
+    for member in members:
+        submission = submission_by_student.get(member.id)
+        rows.append(
+            {
+                "student": member,
+                "submission": submission,
+                "submitted": submission is not None,
+            }
+        )
+
+    context = {
+        "assignment": post,
+        "group": group,
+        "rows": rows,
+    }
+    return render(request, "assignments/group_submission_detail.html", context)
 
 @login_required
 def teacher_dashboard(request):

@@ -1,0 +1,48 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block head_title %}{% endblock head_title %}
+    </title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock extra_head %}
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            {% if messages %}
+            <div class="notification-list" style="margin-bottom: 14px;">
+                {% for message in messages %}
+                <div class="notification-item">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="course-grid" style="margin-bottom: 16px;">
+                {% if user.is_authenticated %}
+                    {% url 'account_logout' as logout_url_ %}
+                    {% if logout_url_ %}
+                    <a class="course-tag" href="{{ logout_url_ }}">{% trans "Sign Out" %}</a>
+                    {% endif %}
+                {% else %}
+                    {% url 'account_login' as login_url_ %}
+                    {% if login_url_ %}
+                    <a class="course-tag" href="{{ login_url_ }}">{% trans "Sign In" %}</a>
+                    {% endif %}
+                    {% url 'account_signup' as signup_url_ %}
+                    {% if signup_url_ %}
+                    <a class="course-tag" href="{{ signup_url_ }}">{% trans "Sign Up" %}</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            {% block content %}{% endblock content %}
+        </div>
+    </div>
+    {% block extra_body %}{% endblock extra_body %}
+</body>
+</html>

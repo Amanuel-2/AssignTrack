@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-container">
+    <div class="review-page-header">
+        <p class="gm-breadcrumb">
+            <a href="{% url 'instructor_dashboard' %}">Group Management</a>
+            <span>/</span>
+            <span>{{ assignment.title }}</span>
+        </p>
+        <h2>{{ assignment.title }}</h2>
+        <p><strong>Due:</strong> {{ assignment.deadline|date:"M d, Y H:i" }}</p>
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Groups</h2>
+            <a class="btn btn-secondary btn-sm" href="{% url 'instructor_dashboard' %}">Back</a>
+        </div>
+        <div class="gm-toolbar">
+            <div class="assignment-search">
+                <span class="assignment-search__icon" aria-hidden="true">&#128269;</span>
+                <input type="search" data-gm-group-search placeholder="Search by group name">
+            </div>
+            <div class="assignment-filters">
+                <button type="button" class="assignment-filter is-active" data-gm-group-filter="all">All</button>
+                <button type="button" class="assignment-filter" data-gm-group-filter="submitted">Submitted</button>
+                <button type="button" class="assignment-filter" data-gm-group-filter="pending">Pending</button>
+            </div>
+        </div>
+
+        <div class="gm-grid js-gm-group-grid">
+            {% for item in group_cards %}
+            <a class="gm-card js-gm-group-card"
+               href="{% url 'group_submission_detail' assignment.id item.group.id %}"
+               data-group-name="{{ item.group.name|lower }}"
+               data-status="{{ item.status|lower }}">
+                <div class="gm-card__header">
+                    <h3>{{ item.group.name }}</h3>
+                    <span class="badge {{ item.status_class }}">{{ item.status }}</span>
+                </div>
+                <div class="gm-card__meta">
+                    <span><strong>Members:</strong> {{ item.member_count }}</span>
+                    <span><strong>Submission:</strong> {{ item.status }}</span>
+                </div>
+            </a>
+            {% empty %}
+            <div class="gm-grid">
+                <div class="gm-card gm-card--placeholder">
+                    <div class="gm-card__header">
+                        <h3>Sample Group 1</h3>
+                        <span class="badge submitted">Submitted</span>
+                    </div>
+                    <div class="gm-card__meta">
+                        <span><strong>Members:</strong> 4</span>
+                        <span><strong>Submission:</strong> Submitted</span>
+                    </div>
+                </div>
+                <div class="gm-card gm-card--placeholder">
+                    <div class="gm-card__header">
+                        <h3>Sample Group 2</h3>
+                        <span class="badge overdue">Pending</span>
+                    </div>
+                    <div class="gm-card__meta">
+                        <span><strong>Members:</strong> 3</span>
+                        <span><strong>Submission:</strong> Pending</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="empty-state js-gm-group-empty" hidden>No groups match your filters.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var searchInput = document.querySelector('[data-gm-group-search]');
+    var filterButtons = document.querySelectorAll('[data-gm-group-filter]');
+    var cards = document.querySelectorAll('.js-gm-group-card');
+    var emptyState = document.querySelector('.js-gm-group-empty');
+    var activeFilter = 'all';
+
+    if (!searchInput || !emptyState || !cards.length) return;
+
+    function applyFilters() {
+        var term = searchInput.value.trim().toLowerCase();
+        var visible = 0;
+
+        cards.forEach(function (card) {
+            var name = card.dataset.groupName || '';
+            var status = card.dataset.status || '';
+            var searchMatch = !term || name.indexOf(term) !== -1;
+            var filterMatch = activeFilter === 'all' || status === activeFilter;
+            var show = searchMatch && filterMatch;
+            card.style.display = show ? '' : 'none';
+            if (show) visible += 1;
+        });
+
+        emptyState.hidden = visible !== 0;
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    filterButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            activeFilter = button.getAttribute('data-gm-group-filter') || 'all';
+            filterButtons.forEach(function (b) { b.classList.remove('is-active'); });
+            button.classList.add('is-active');
+            applyFilters();
+        });
+    });
+
+    applyFilters();
+});
+</script>
+{% endblock %}

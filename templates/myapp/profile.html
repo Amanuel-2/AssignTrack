@@ -54,19 +54,6 @@
 
     <div class="section-card">
         <div class="section-header">
-            <h2 class="section-title">Enrolled Courses</h2>
-        </div>
-        <div class="course-grid">
-            {% for c in enrolled_courses %}
-            <span class="course-tag">{{ c.name }}</span>
-            {% empty %}
-            <p class="empty-state">No enrolled courses.</p>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="section-card">
-        <div class="section-header">
             <h2 class="section-title">Joined Groups</h2>
         </div>
         <div class="course-grid">
@@ -193,7 +180,7 @@
         </div>
         <div class="row-list">
             {% for g in groups %}
-            <a class="group-row" href="{% url 'assignment_review' g.post.id %}">
+            <a class="group-row" href="{% url 'group_submission_detail' g.post.id g.id %}">
                 <div class="group-left">
                     <span class="group-assignment">{{ g.post.title }}</span>
                     <span class="group-name">{{ g.name }}</span>

@@ -79,21 +79,82 @@
         <div class="section-header">
             <h2 class="section-title">Group Management</h2>
         </div>
-        <div class="row-list">
-            {% for g in groups %}
-            <a class="group-row" href="{% url 'assignment_review' g.post.id %}">
-                <div class="group-left">
-                    <span class="group-assignment">{{ g.post.title }}</span>
-                    <span class="group-name">{{ g.name }}</span>
+        <div class="gm-toolbar">
+            <div class="assignment-search">
+                <span class="assignment-search__icon" aria-hidden="true">&#128269;</span>
+                <input type="search" data-gm-assignment-search placeholder="Search assignments for group management">
+            </div>
+        </div>
+        <div class="gm-grid js-gm-assignment-grid">
+            {% for a in group_assignments %}
+            <a class="gm-card js-gm-assignment-card" href="{% url 'assignment_groups_overview' a.id %}" data-title="{{ a.title|lower }}" data-course="{{ a.course.name|default:''|lower }}">
+                <div class="gm-card__header">
+                    <h3>{{ a.title }}</h3>
+                    <span class="badge {% if a.is_overdue %}overdue{% else %}pending{% endif %}">{% if a.is_overdue %}Closed{% else %}Active{% endif %}</span>
                 </div>
-                <span class="member-badge">{{ g.members.count }} members</span>
+                <p class="text-muted">{{ a.course.name|default:"No Course" }}</p>
+                <div class="gm-card__meta">
+                    <span><strong>Total Groups:</strong> {{ a.group_total|default:0 }}</span>
+                    <span><strong>Due:</strong> {{ a.deadline|date:"M d, Y H:i" }}</span>
+                </div>
             </a>
             {% empty %}
-            <p class="empty-state">No groups yet.</p>
+            <div class="gm-grid">
+                <div class="gm-card gm-card--placeholder">
+                    <div class="gm-card__header">
+                        <h3>Sample Assignment A</h3>
+                        <span class="badge pending">Active</span>
+                    </div>
+                    <p class="text-muted">Placeholder course</p>
+                    <div class="gm-card__meta">
+                        <span><strong>Total Groups:</strong> 3</span>
+                        <span><strong>Due:</strong> Mar 01, 2026 23:59</span>
+                    </div>
+                </div>
+                <div class="gm-card gm-card--placeholder">
+                    <div class="gm-card__header">
+                        <h3>Sample Assignment B</h3>
+                        <span class="badge overdue">Closed</span>
+                    </div>
+                    <p class="text-muted">Placeholder course</p>
+                    <div class="gm-card__meta">
+                        <span><strong>Total Groups:</strong> 4</span>
+                        <span><strong>Due:</strong> Feb 10, 2026 18:00</span>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
         </div>
+        <p class="empty-state js-gm-assignment-empty" hidden>No assignments match your search.</p>
     </div>
 
     {% endif %}
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var searchInput = document.querySelector('[data-gm-assignment-search]');
+    var cards = document.querySelectorAll('.js-gm-assignment-card');
+    var emptyState = document.querySelector('.js-gm-assignment-empty');
+
+    if (!searchInput || !cards.length || !emptyState) return;
+
+    function applySearch() {
+        var term = searchInput.value.trim().toLowerCase();
+        var visible = 0;
+
+        cards.forEach(function (card) {
+            var title = card.dataset.title || '';
+            var course = card.dataset.course || '';
+            var match = !term || title.indexOf(term) !== -1 || course.indexOf(term) !== -1;
+            card.style.display = match ? '' : 'none';
+            if (match) visible += 1;
+        });
+
+        emptyState.hidden = visible !== 0;
+    }
+
+    searchInput.addEventListener('input', applySearch);
+    applySearch();
+});
+</script>
 {% endblock %}

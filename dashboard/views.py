@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
-from django.db.models import Case, IntegerField, Value, When
-from django.shortcuts import render
+from django.db.models import Case, Count, IntegerField, Value, When
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
 from assignments.models import Post, Submission
@@ -42,6 +43,10 @@ def _build_assignment_cards_for_user(user):
     return posts
 
 
+def _is_lecturer(user):
+    return _role(user) == "lecturer"
+
+
 def home_view(request):
     role = _role(request.user) if request.user.is_authenticated else ""
     context = {
@@ -58,7 +63,6 @@ def dashboard_view(request):
     assignments = Post.objects.select_related("course", "author").order_by("deadline")
     submissions = Submission.objects.filter(student=request.user).select_related("post")
     joined_groups = Group.objects.filter(members=request.user).select_related("post")
-    enrolled_courses = Course.objects.filter(student=request.user)
     posts = _build_assignment_cards_for_user(request.user)
 
     submitted_post_ids = {submission.post_id for submission in submissions}
@@ -74,7 +78,6 @@ def dashboard_view(request):
 
     context = {
         "posts": posts,
-        "enrolled_courses": enrolled_courses,
         "joined_groups": joined_groups,
         "upcoming_assignments": upcoming_assignments,
         "overdue_assignments": overdue_assignments,
@@ -85,10 +88,14 @@ def dashboard_view(request):
 
 @login_required
 def instructor_dashboard_view(request):
-    if _role(request.user) != "lecturer":
+    if not _is_lecturer(request.user):
         return render(request, "dashboard/instructor_dashboard.html", {"forbidden": True})
 
-    my_assignments = Post.objects.filter(author=request.user).select_related("course")
+    my_assignments = (
+        Post.objects.filter(author=request.user)
+        .select_related("course")
+        .annotate(group_total=Count("groups", distinct=True))
+    )
     my_courses = Course.objects.filter(
         lecturer=request.user,
         posts__author=request.user,
@@ -99,7 +106,44 @@ def instructor_dashboard_view(request):
     context = {
         "courses": my_courses,
         "assignments": my_assignments,
+        "group_assignments": my_assignments.order_by("deadline"),
         "submissions": submissions,
         "groups": groups,
     }
     return render(request, "dashboard/instructor_dashboard.html", context)
+
+
+@login_required
+def assignment_groups_overview_view(request, post_id):
+    if not _is_lecturer(request.user):
+        return HttpResponseForbidden("Only instructors can access this page.")
+
+    assignment = get_object_or_404(
+        Post.objects.select_related("course", "author"),
+        id=post_id,
+    )
+    if assignment.author_id != request.user.id:
+        return HttpResponseForbidden("You do not own this assignment.")
+
+    groups = (
+        Group.objects.filter(post=assignment)
+        .prefetch_related("members")
+        .order_by("name")
+    )
+    group_cards = []
+    for group in groups:
+        has_submission = Submission.objects.filter(post=assignment, group=group).exists()
+        group_cards.append(
+            {
+                "group": group,
+                "member_count": group.members.count(),
+                "status": "Submitted" if has_submission else "Pending",
+                "status_class": "submitted" if has_submission else "overdue",
+            }
+        )
+
+    context = {
+        "assignment": assignment,
+        "group_cards": group_cards,
+    }
+    return render(request, "dashboard/group_management_groups.html", context)

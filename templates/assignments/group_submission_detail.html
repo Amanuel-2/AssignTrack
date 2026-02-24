@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-container">
+    <div class="review-page-header">
+        <p class="gm-breadcrumb">
+            <a href="{% url 'instructor_dashboard' %}">Group Management</a>
+            <span>/</span>
+            <a href="{% url 'assignment_groups_overview' assignment.id %}">{{ assignment.title }}</a>
+            <span>/</span>
+            <span>{{ group.name }}</span>
+        </p>
+        <h2>{{ group.name }}</h2>
+        <p><strong>Assignment:</strong> {{ assignment.title }}</p>
+        {% if assignment.course %}
+        <p><strong>Course:</strong> {{ assignment.course.name }}</p>
+        {% endif %}
+    </div>
+
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">Group Members & Submissions</h2>
+            <a class="btn btn-secondary btn-sm" href="{% url 'assignment_groups_overview' assignment.id %}">Back to Groups</a>
+        </div>
+
+        <div class="review-table-wrapper">
+            <table class="review-table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Status</th>
+                        <th>Submitted Link</th>
+                        <th>Submitted File</th>
+                        <th>Submission Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td><strong>{{ row.student.get_full_name|default:row.student.username }}</strong></td>
+                        <td>
+                            {% if row.submitted %}
+                            <span class="badge submitted">Submitted</span>
+                            {% else %}
+                            <span class="badge overdue">Not Submitted</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.submission and row.submission.submission_link %}
+                            <a href="{{ row.submission.submission_link }}" class="assignment-link" target="_blank" rel="noopener noreferrer">
+                                Open Link
+                            </a>
+                            {% elif row.submission %}
+                            <span class="text-muted">No link</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.submission and row.submission.file %}
+                            <a href="{{ row.submission.file.url }}" class="btn btn-sm btn-download" target="_blank" rel="noopener noreferrer">
+                                Open File
+                            </a>
+                            {% elif row.submission %}
+                            <span class="text-muted">No file</span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.submission %}
+                            {{ row.submission.submitted_at|date:"M d, Y H:i" }}
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            No members in this group.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

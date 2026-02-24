@@ -7,6 +7,7 @@ from assignments.views import (
     assignment_delete_view,
     assignment_detail_view,
     assignment_edit_view,
+    group_submission_detail_view,
     assignment_review_view,
     teacher_dashboard
 )
@@ -21,5 +22,6 @@ urlpatterns = [
     path("submit/", SubmissionCreateView.as_view(), name="assignment_submit"),
     path("teacher/dashboard/", teacher_dashboard, name="teacher_dashboard"),
     path("manage/<int:pk>/review/", assignment_review_view, name="assignment_review"),
+    path("manage/<int:post_id>/groups/<int:group_id>/", group_submission_detail_view, name="group_submission_detail"),
 
 ]
