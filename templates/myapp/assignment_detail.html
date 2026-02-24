@@ -3,173 +3,266 @@
 {% block content %}
 <div class="page-container">
 
-    <!-- Assignment Info -->
-    <div class="section-card">
-        <h2>{{ post.title }}</h2>
-        <div class="profile-detail-row">
-            <span class="profile-label">Course</span>
-            <span class="profile-value">{{ post.course.name|default:"Not assigned" }}</span>
-        </div>
-        <div class="profile-detail-row">
-            <span class="profile-label">Instructor</span>
-            <span class="profile-value">{{ post.author.get_full_name|default:post.author.username }}</span>
-        </div>
-        <div class="profile-detail-row">
-            <span class="profile-label">Deadline</span>
-            <span class="profile-value">{{ post.deadline }}</span>
-        </div>
-        <div class="profile-detail-row">
-            <span class="profile-label">Created</span>
-            <span class="profile-value">{{ post.created_at }}</span>
-        </div>
-        <div class="profile-detail-row" style="flex-direction: column; gap: 8px;">
-            <span class="profile-label">Description</span>
-            <span class="profile-value">{{ post.content }}</span>
-        </div>
-        {% if post.attachment %}
-        <div class="actions">
-            <a href="{{ post.attachment.url }}" download class="btn btn-download">Download Assignment</a>
-        </div>
-        {% endif %}
-    </div>
+    <div class="assignment-detail-layout">
+        <div class="assignment-detail-main">
+            <!-- Assignment Info -->
+            <div class="section-card">
+                <h2>{{ post.title }}</h2>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Course</span>
+                    <span class="profile-value">{{ post.course.name|default:"Not assigned" }}</span>
+                </div>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Instructor</span>
+                    <span class="profile-value">{{ post.author.get_full_name|default:post.author.username }}</span>
+                </div>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Deadline</span>
+                    <span class="profile-value">{{ post.deadline }}</span>
+                </div>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Created</span>
+                    <span class="profile-value">{{ post.created_at }}</span>
+                </div>
+                <div class="profile-detail-row" style="flex-direction: column; gap: 8px;">
+                    <span class="profile-label">Description</span>
+                    <span class="profile-value">{{ post.content }}</span>
+                </div>
+                {% if post.attachment %}
+                <div class="actions">
+                    <a href="{{ post.attachment.url }}" download class="btn btn-download">Download Assignment</a>
+                </div>
+                {% endif %}
+            </div>
 
-    <!-- Group Information -->
-    <div class="section-card">
-        <div class="section-header">
-            <h2 class="section-title">Group Information</h2>
-        </div>
-        <div class="profile-detail-row">
-            <span class="profile-label">Group Type</span>
-            <span class="profile-value">{{ post.get_group_type_display }}</span>
-        </div>
-        <div class="profile-detail-row">
-            <span class="profile-label">Your Group</span>
-            <span class="profile-value">
-                {% if group %}{{ group.name }}{% else %}Not joined{% endif %}
-            </span>
-        </div>
-    </div>
+            <!-- Group Information -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Group Information</h2>
+                </div>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Group Type</span>
+                    <span class="profile-value">{{ post.get_group_type_display }}</span>
+                </div>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Your Group</span>
+                    <span class="profile-value">
+                        {% if group %}{{ group.name }}{% else %}Not joined{% endif %}
+                    </span>
+                </div>
+            </div>
 
-    <!-- Available Groups (manual only) -->
-    {% if post.group_type == "manual" %}
-    <div class="section-card">
-        <div class="section-header">
-            <h2 class="section-title">Available Groups</h2>
-        </div>
-        <form id="csrf-form" style="display:none;">{% csrf_token %}</form>
+            <!-- Available Groups (manual only) -->
+            {% if post.group_type == "manual" %}
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Available Groups</h2>
+                </div>
+                <form id="csrf-form" style="display:none;">{% csrf_token %}</form>
 
-        {% for g in groups %}
-        <div id="group-{{ g.id }}" class="group-box">
-            <p><strong>{{ g.name }}</strong></p>
-            <p>
-                Members:
-                <span id="count-{{ g.id }}">{{ g.members.count }}</span>
-                {% if post.max_students_per_group %}/ {{ post.max_students_per_group }}{% endif %}
-            </p>
+                {% for g in groups %}
+                <div id="group-{{ g.id }}" class="group-box">
+                    <p><strong>{{ g.name }}</strong></p>
+                    <p>
+                        Members:
+                        <span id="count-{{ g.id }}">{{ g.members.count }}</span>
+                        {% if post.max_students_per_group %}/ {{ post.max_students_per_group }}{% endif %}
+                    </p>
 
-            {% if group and group.id == g.id %}
-            <span class="badge submitted">You are in this group</span>
-            {% elif post.max_students_per_group and g.members.count >= post.max_students_per_group %}
-            <button type="button" class="btn btn-disabled" disabled>Group Full</button>
-            {% elif not group %}
-            <button type="button" class="btn btn-primary btn-sm" id="join-btn-{{ g.id }}" onclick="joinGroup({{ g.id }})">Join Group</button>
+                    {% if group and group.id == g.id %}
+                    <span class="badge submitted">You are in this group</span>
+                    {% elif post.max_students_per_group and g.members.count >= post.max_students_per_group %}
+                    <button type="button" class="btn btn-disabled" disabled>Group Full</button>
+                    {% elif not group %}
+                    <button type="button" class="btn btn-primary btn-sm" id="join-btn-{{ g.id }}"
+                        onclick="joinGroup({{ g.id }})">Join Group</button>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="empty-state">No groups available yet.</p>
+                {% endfor %}
+            </div>
             {% endif %}
-        </div>
-        {% empty %}
-        <p class="empty-state">No groups available yet.</p>
-        {% endfor %}
-    </div>
-    {% endif %}
 
-    <!-- Submission -->
-    <div class="section-card">
-        <div class="section-header">
-            <h2 class="section-title">Submission</h2>
-        </div>
-        {% if submission %}
-        <div class="profile-detail-row">
-            <span class="profile-label">Status</span>
-            <span class="badge submitted">Submitted</span>
-        </div>
-        <div class="profile-detail-row">
-            <span class="profile-label">Submitted At</span>
-            <span class="profile-value">{{ submission.submitted_at }}</span>
-        </div>
-        <div class="actions">
-            <a href="{{ submission.file.url }}" download class="btn btn-download">Download Your Submission</a>
-        </div>
-        {% else %}
-        <div class="profile-detail-row">
-            <span class="profile-label">Status</span>
-            {% if post.is_overdue %}
-            <span class="badge overdue">Overdue</span>
-            {% else %}
-            <span class="badge pending">Pending</span>
-            {% endif %}
+            <!-- Submission -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Submission</h2>
+                </div>
+                {% if submission %}
+                <div class="profile-detail-row">
+                    <span class="profile-label">Status</span>
+                    <span class="badge submitted">Submitted</span>
+                </div>
+                <div class="profile-detail-row">
+                    <span class="profile-label">Submitted At</span>
+                    <span class="profile-value">{{ submission.submitted_at }}</span>
+                </div>
+                {% if submission.submission_link %}
+                <div class="profile-detail-row">
+                    <span class="profile-label">Main Link</span>
+                    <span class="profile-value"><a href="{{ submission.submission_link }}" target="_blank" rel="noopener">Open Link</a></span>
+                </div>
+                {% endif %}
+                <div class="actions">
+                    {% if submission.file %}
+                    <a href="{{ submission.file.url }}" download class="btn btn-download">Download Your Submission</a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="profile-detail-row">
+                    <span class="profile-label">Status</span>
+                    {% if post.is_overdue %}
+                    <span class="badge overdue">Overdue</span>
+                    {% else %}
+                    <span class="badge pending">Pending</span>
+                    {% endif %}
+                </div>
+
+                {% if submit_error %}
+                <p class="error-text">{{ submit_error }}</p>
+                {% endif %}
+
+                {% if can_submit %}
+                <form method="post" enctype="multipart/form-data" class="submission-form" data-confirm-submit data-confirm-message="Are you sure you want to submit?">
+                    {% csrf_token %}
+                    <div class="submission-form__grid">
+                        <div>
+                            <label for="{{ form.file.id_for_label }}">Submission File</label>
+                            {{ form.file }}
+                            {% if form.file.errors %}<ul class="errorlist">{{ form.file.errors }}</ul>{% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.submission_link.id_for_label }}">Main Link</label>
+                            {{ form.submission_link }}
+                            {% if form.submission_link.errors %}<ul class="errorlist">{{ form.submission_link.errors }}</ul>{% endif %}
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Upload Submission</button>
+                </form>
+                {% endif %}
+                {% endif %}
+            </div>
         </div>
 
-        {% if submit_error %}
-        <p class="error-text">{{ submit_error }}</p>
-        {% endif %}
-
-        {% if can_submit %}
-        <form method="post" enctype="multipart/form-data" style="margin-top: 16px;">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button class="btn btn-primary" type="submit">Upload Submission</button>
-        </form>
-        {% endif %}
-        {% endif %}
+        <div class="assignment-detail-side">
+            <div class="section-card assignment-deadline-card">
+                <div class="section-header">
+                    <h2 class="section-title">Deadline</h2>
+                </div>
+                <div class="asgn-card__timer js-deadline-widget" data-deadline="{{ post.deadline|date:'c' }}">
+                    <div class="deadline-circle">
+                        <div class="deadline-circle__inner">
+                            <span class="deadline-circle__number" data-deadline-number>--</span>
+                            <span class="deadline-circle__label" data-deadline-label>Days left</span>
+                        </div>
+                    </div>
+                    <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
+                </div>
+                <p class="text-muted">Due: {{ post.deadline|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
     </div>
 
 </div>
 
 <script>
-function getCSRFToken() {
-    const tokenInput = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]');
-    return tokenInput ? tokenInput.value : '';
-}
+    function updateDeadlineWidget(widget) {
+        var iso = widget.getAttribute('data-deadline');
+        var deadline = new Date(iso);
+        if (!iso || isNaN(deadline.getTime())) return;
 
-function disableJoinButtons() {
-    document.querySelectorAll("[id^='join-btn-']").forEach(btn => {
-        btn.disabled = true;
-    });
-}
+        var numEl = widget.querySelector('[data-deadline-number]');
+        var labelEl = widget.querySelector('[data-deadline-label]');
+        var inlineEl = widget.querySelector('[data-deadline-inline]');
+        var now = new Date();
+        var diffMs = deadline - now;
 
-function joinGroup(groupId) {
-    const button = document.getElementById(`join-btn-${groupId}`);
-    if (button) {
-        button.disabled = true;
-    }
+        widget.classList.remove('is-closed', 'is-warning', 'is-urgent');
 
-    fetch(`/api/groups/${groupId}/join/`, {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": getCSRFToken(),
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const count = document.getElementById(`count-${groupId}`);
-            if (count && data.member_count !== undefined) {
-                count.innerText = data.member_count;
-            }
-            disableJoinButtons();
-            window.location.reload();
+        if (diffMs <= 0) {
+            widget.classList.add('is-closed');
+            if (numEl) numEl.textContent = 'Closed';
+            if (labelEl) labelEl.textContent = '';
+            if (inlineEl) inlineEl.textContent = 'Deadline has passed';
             return;
         }
-        if (button) {
-            button.disabled = false;
+
+        var totalSeconds = Math.floor(diffMs / 1000);
+        var days = Math.floor(totalSeconds / 86400);
+        var hours = Math.floor((totalSeconds % 86400) / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        if (totalSeconds < 86400) {
+            widget.classList.add('is-urgent');
+        } else if (days < 3) {
+            widget.classList.add('is-warning');
         }
-        alert(data.error || "Unable to join group.");
-    })
-    .catch(() => {
-        if (button) {
-            button.disabled = false;
+
+        if (days > 0) {
+            if (numEl) numEl.textContent = String(days);
+            if (labelEl) labelEl.textContent = days === 1 ? 'Day left' : 'Days left';
+        } else if (hours > 0) {
+            if (numEl) numEl.textContent = String(hours);
+            if (labelEl) labelEl.textContent = hours === 1 ? 'Hour left' : 'Hours left';
+        } else {
+            if (numEl) numEl.textContent = String(Math.max(minutes, 0));
+            if (labelEl) labelEl.textContent = minutes === 1 ? 'Min left' : 'Mins left';
         }
-        alert("Request failed. Please try again.");
-    });
-}
+
+        if (inlineEl) inlineEl.textContent = days + 'd ' + hours + 'h ' + minutes + 'm remaining';
+    }
+
+    document.querySelectorAll('.js-deadline-widget').forEach(updateDeadlineWidget);
+    setInterval(function () {
+        document.querySelectorAll('.js-deadline-widget').forEach(updateDeadlineWidget);
+    }, 60000);
+
+    function getCSRFToken() {
+        const tokenInput = document.querySelector('#csrf-form [name=csrfmiddlewaretoken]');
+        return tokenInput ? tokenInput.value : '';
+    }
+
+    function disableJoinButtons() {
+        document.querySelectorAll("[id^='join-btn-']").forEach(btn => {
+            btn.disabled = true;
+        });
+    }
+
+    function joinGroup(groupId) {
+        const button = document.getElementById(`join-btn-${groupId}`);
+        if (button) {
+            button.disabled = true;
+        }
+
+        fetch(`/api/groups/${groupId}/join/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCSRFToken(),
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const count = document.getElementById(`count-${groupId}`);
+                    if (count && data.member_count !== undefined) {
+                        count.innerText = data.member_count;
+                    }
+                    disableJoinButtons();
+                    window.location.reload();
+                    return;
+                }
+                if (button) {
+                    button.disabled = false;
+                }
+                alert(data.error || "Unable to join group.");
+            })
+            .catch(() => {
+                if (button) {
+                    button.disabled = false;
+                }
+                alert("Request failed. Please try again.");
+            });
+    }
 </script>
 {% endblock %}

@@ -2,52 +2,55 @@
    DESIGN TOKENS — ASSIGNTRACK DARK THEME
    ============================================================ */
 :root {
-  --bg-root:        #0f0f0f;
-  --bg-nav:         #111111;
+  --bg-root:        #121212;
+  --bg-nav:         #161616;
   --bg-card:        #1a1a1a;
   --bg-elevated:    #212121;
   --bg-input:       #1e1e1e;
   --bg-hover:       #252525;
 
-  --accent:         #4f8ef7;
-  --accent-hover:   #3b7de8;
-  --accent-dim:     rgba(79, 142, 247, 0.12);
+  --accent: #4f8ef7;
+  --accent-hover: #3b7de8;
+  --accent-dim: rgba(79, 142, 247, 0.12);
 
-  --text-primary:   #ededed;
+  --text-primary: #ededed;
   --text-secondary: #9a9a9a;
-  --text-muted:     #5c5c5c;
+  --text-muted: #5c5c5c;
 
-  --border:         #252525;
-  --border-subtle:  #1d1d1d;
-  --border-hover:   #383838;
+  --border: #252525;
+  --border-subtle: #1d1d1d;
+  --border-hover: #383838;
 
-  --shadow-sm:      0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md:      0 4px 24px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.55);
 
-  --success:        #22c55e;
-  --success-bg:     rgba(34, 197, 94, 0.12);
-  --warning:        #f59e0b;
-  --warning-bg:     rgba(245, 158, 11, 0.10);
-  --danger:         #ef4444;
-  --danger-bg:      rgba(239, 68, 68, 0.10);
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245, 158, 11, 0.10);
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.10);
 
-  --radius-sm:      6px;
-  --radius:         10px;
-  --radius-lg:      14px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
 
-  --font:           'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* ============================================================
    BASE RESET & TYPOGRAPHY
    ============================================================ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body {
+html,
+body {
   min-height: 100%;
 }
 
@@ -71,17 +74,33 @@ a:hover {
   text-decoration: none;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
-h1 { font-size: 1.75rem; }
-h2 { font-size: 1.4rem; }
-h3 { font-size: 1.15rem; }
-h4 { font-size: 1rem; }
+h1 {
+  font-size: 1.75rem;
+}
+
+h2 {
+  font-size: 1.4rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
 
 p {
   margin-bottom: 0.75rem;
@@ -152,6 +171,12 @@ strong {
   color: var(--text-primary);
   background: var(--bg-elevated);
   text-decoration: none;
+}
+
+.nav-bar a.is-active {
+  color: var(--text-primary);
+  font-weight: 700;
+  background: var(--bg-elevated);
 }
 
 .nav-right span {
@@ -281,7 +306,8 @@ strong {
   font-size: 0.78rem;
 }
 
-button.btn, button[type="submit"] {
+button.btn,
+button[type="submit"] {
   font-family: var(--font);
   cursor: pointer;
 }
@@ -382,6 +408,236 @@ button[type="submit"].btn-primary:hover {
   flex-wrap: wrap;
 }
 
+/* ============================================================
+   STUDENT DASHBOARD — ASSIGNMENT CARD GRID
+   ============================================================ */
+.assignment-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  justify-items: center;
+}
+
+.assignment-cards-grid > .empty-state {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+/* ============================================================
+   ASSIGNMENT CARD — VERTICAL GRID CARD
+   ============================================================ */
+.asgn-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 360px;
+  transition: border-color 0.2s ease, background 0.2s ease,
+              box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.asgn-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Top row: course tag + status badge */
+.asgn-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.asgn-card__course-tag {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(79, 142, 247, 0.2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Title */
+.asgn-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 8px;
+  transition: color 0.2s ease;
+}
+
+.asgn-card__title:hover {
+  color: var(--accent);
+}
+
+/* Description */
+.asgn-card__desc {
+  font-size: 0.845rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0 0 16px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================
+   CIRCULAR COUNTDOWN TIMER
+   ============================================================ */
+.asgn-card__timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+  flex: 1;
+  justify-content: center;
+}
+
+/* Base circle ring */
+.deadline-circle {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  border: 5px solid var(--accent);
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.08), 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.deadline-circle__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+}
+
+.deadline-circle__number {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.05em;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.deadline-circle__label {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+  transition: color 0.3s ease;
+}
+
+.deadline-circle__subtext {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Warning state — < 3 days */
+.asgn-card__timer.is-warning .deadline-circle {
+  border-color: var(--warning);
+  background: var(--warning-bg);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.asgn-card__timer.is-warning .deadline-circle__number {
+  color: var(--warning);
+}
+
+/* Urgent state — < 24 hours */
+.asgn-card__timer.is-urgent .deadline-circle {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.asgn-card__timer.is-urgent .deadline-circle__number {
+  color: var(--danger);
+}
+
+/* Closed state — past deadline */
+.asgn-card__timer.is-closed .deadline-circle {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.asgn-card__timer.is-closed .deadline-circle__number {
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  color: var(--danger);
+}
+
+.asgn-card__timer.is-closed .deadline-circle__subtext {
+  color: var(--danger);
+}
+
+/* ============================================================
+   CARD FOOTER
+   ============================================================ */
+.asgn-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.asgn-card__deadline-text {
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.asgn-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Legacy card classes — kept for backward compat */
+.assignment-card-modern {
+  display: none; /* replaced by .asgn-card */
+}
+
 .dashboard-title {
   font-size: 1.6rem;
   font-weight: 700;
@@ -394,6 +650,59 @@ button[type="submit"].btn-primary:hover {
   font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0;
+}
+
+.dashboard-profile-card {
+  min-width: 280px;
+  max-width: 360px;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-profile-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-profile-card__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-hover);
+  flex-shrink: 0;
+}
+
+.dashboard-profile-card__avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.dashboard-profile-card__name {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dashboard-profile-card__hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.77rem;
 }
 
 /* ============================================================
@@ -852,6 +1161,48 @@ form .help-text {
   border: 1px solid rgba(79, 142, 247, 0.2);
 }
 
+.profile-avatar-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.profile-avatar--image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  color: transparent;
+}
+
+.profile-avatar-upload {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.profile-avatar-wrap:hover .profile-avatar-upload {
+  opacity: 1;
+}
+
+.profile-avatar-upload__button {
+  position: absolute;
+  inset: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.66);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.profile-avatar-upload__input {
+  display: none;
+}
+
 .profile-info {
   flex: 1;
 }
@@ -1106,6 +1457,97 @@ form .help-text {
   margin-bottom: 8px;
 }
 
+.assignment-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.assignment-detail-main {
+  min-width: 0;
+}
+
+.assignment-detail-side {
+  position: sticky;
+  top: 80px;
+}
+
+.assignment-deadline-card .asgn-card__timer {
+  border-top: none;
+  margin-top: -8px;
+}
+
+.submission-form {
+  margin-top: 16px;
+}
+
+.submission-form__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.submission-form__grid label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.submission-form__grid input[type="url"],
+.submission-form__grid input[type="file"] {
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+}
+
+.confirm-modal[hidden] {
+  display: none;
+}
+
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+}
+
+.confirm-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 8, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.confirm-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 420px);
+  margin: 18vh auto 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 18px;
+}
+
+.confirm-modal__dialog h3 {
+  margin-bottom: 6px;
+}
+
+.confirm-modal__dialog p {
+  margin-bottom: 16px;
+}
+
+.confirm-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* ============================================================
    ASSIGNMENT REVIEW PAGE — TABLE
    ============================================================ */
@@ -1291,11 +1733,29 @@ form .help-text {
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
-  .nav-bar {
-    padding: 10px 16px;
-    height: auto;
-    flex-wrap: wrap;
-    gap: 6px;
+  /* Show mobile top bar */
+  .mobile-topbar {
+    display: flex;
+  }
+
+  /* Sidebar becomes fixed overlay */
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    height: calc(100vh - 52px);
+    width: 230px !important;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 160;
+  }
+
+  .layout.mobile-open .sidebar {
+    transform: translateX(0);
   }
 
   .nav-left {
@@ -1339,10 +1799,22 @@ form .help-text {
     align-items: flex-start;
   }
 
+  .assignment-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .assignment-detail-side {
+    position: static;
+  }
+
   .assignment-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .assignment-cards-grid {
+    max-width: 100%;
   }
 
   .submission-row,
@@ -1362,6 +1834,20 @@ form .help-text {
   }
 }
 
+/* md: 2 columns */
+@media (min-width: 768px) {
+  .assignment-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* lg: 3 columns */
+@media (min-width: 1200px) {
+  .assignment-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 480px) {
   .btn {
     padding: 8px 14px;
@@ -1375,5 +1861,9 @@ form .help-text {
   .assignment-item-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .dashboard-profile-card {
+    min-width: 100%;
   }
 }

@@ -11,6 +11,22 @@
             <h1 class="dashboard-title">Student Dashboard</h1>
             <p class="dashboard-subtitle">Track your assignments, groups, and upcoming deadlines.</p>
         </div>
+        <div class="dashboard-profile-card">
+            <div class="dashboard-profile-card__identity">
+                {% if user.profile.profile_picture %}
+                <img class="dashboard-profile-card__avatar" src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }} profile picture">
+                {% else %}
+                <div class="dashboard-profile-card__avatar dashboard-profile-card__avatar--fallback">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                {% endif %}
+                <div>
+                    <p class="dashboard-profile-card__name">{{ user.get_full_name|default:user.username }}</p>
+                    <p class="dashboard-profile-card__hint">Update your profile picture</p>
+                </div>
+            </div>
+            <a class="btn btn-secondary btn-sm" href="{% url 'profile' %}">Manage Profile</a>
+        </div>
     </div>
 
     <!-- Enrolled Courses -->
@@ -46,19 +62,40 @@
         <div class="section-header">
             <h2 class="section-title">Upcoming Assignments</h2>
         </div>
-        <div class="assignment-list">
+        <div class="assignment-cards-grid">
             {% for a in upcoming_assignments %}
-            <div class="assignment-item">
-                <div class="assignment-item-left">
-                    <a class="assignment-item-title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
-                    <span class="assignment-course">Due: {{ a.deadline|date:"M d, Y H:i" }}</span>
-                </div>
-                <div>
+            <div class="asgn-card">
+                <!-- Course + Status -->
+                <div class="asgn-card__top">
+                    <span class="asgn-card__course-tag">{{ a.course.name|default:"No Course" }}</span>
                     {% if a.has_submitted %}
                     <span class="badge submitted">Submitted</span>
                     {% else %}
-                    <span class="badge pending">Pending</span>
+                    <span class="badge pending">Not Submitted</span>
                     {% endif %}
+                </div>
+
+                <!-- Title -->
+                <a class="asgn-card__title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+
+                <!-- Description -->
+                <p class="asgn-card__desc">{{ a.content|default:"No description provided."|truncatewords:20 }}</p>
+
+                <!-- Countdown Timer -->
+                <div class="asgn-card__timer js-deadline-widget" data-deadline="{{ a.deadline|date:'c' }}">
+                    <div class="deadline-circle">
+                        <div class="deadline-circle__inner">
+                            <span class="deadline-circle__number" data-deadline-number>--</span>
+                            <span class="deadline-circle__label" data-deadline-label>Days left</span>
+                        </div>
+                    </div>
+                    <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
+                </div>
+
+                <!-- Footer: deadline + action -->
+                <div class="asgn-card__footer">
+                    <span class="asgn-card__deadline-text">&#128197; {{ a.deadline|date:"M d, Y H:i" }}</span>
+                    <a class="btn btn-primary btn-sm" href="{% url 'assignment_detail' a.id %}">View</a>
                 </div>
             </div>
             {% empty %}
@@ -72,13 +109,41 @@
         <div class="section-header">
             <h2 class="section-title">Overdue Assignments</h2>
         </div>
-        <div class="assignment-list">
+        <div class="assignment-cards-grid">
             {% for a in overdue_assignments %}
-            <div class="assignment-item">
-                <div class="assignment-item-left">
-                    <a class="assignment-item-title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+            <div class="asgn-card">
+                <!-- Course + Status -->
+                <div class="asgn-card__top">
+                    <span class="asgn-card__course-tag">{{ a.course.name|default:"No Course" }}</span>
+                    {% if a.has_submitted %}
+                    <span class="badge submitted">Submitted</span>
+                    {% else %}
+                    <span class="badge overdue">Closed</span>
+                    {% endif %}
                 </div>
-                <span class="badge overdue">Overdue</span>
+
+                <!-- Title -->
+                <a class="asgn-card__title" href="{% url 'assignment_detail' a.id %}">{{ a.title }}</a>
+
+                <!-- Description -->
+                <p class="asgn-card__desc">{{ a.content|default:"No description provided."|truncatewords:20 }}</p>
+
+                <!-- Countdown Timer (will show Closed) -->
+                <div class="asgn-card__timer js-deadline-widget" data-deadline="{{ a.deadline|date:'c' }}">
+                    <div class="deadline-circle">
+                        <div class="deadline-circle__inner">
+                            <span class="deadline-circle__number" data-deadline-number>--</span>
+                            <span class="deadline-circle__label" data-deadline-label></span>
+                        </div>
+                    </div>
+                    <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
+                </div>
+
+                <!-- Footer: deadline + action -->
+                <div class="asgn-card__footer">
+                    <span class="asgn-card__deadline-text">&#128197; {{ a.deadline|date:"M d, Y H:i" }}</span>
+                    <a class="btn btn-secondary btn-sm" href="{% url 'assignment_detail' a.id %}">View</a>
+                </div>
             </div>
             {% empty %}
             <p class="empty-state">No overdue assignments.</p>
@@ -105,28 +170,113 @@
         <div class="section-header">
             <h2 class="section-title">Assignment Workspace</h2>
         </div>
-        {% for post in posts %}
-        <div class="assignment-detail-card">
-            <h4>{{ post.title }}</h4>
-            <p><strong>Course:</strong> {{ post.course.name|default:"Not assigned" }}</p>
-            <p><strong>Instructor:</strong> {{ post.author.get_full_name|default:post.author.username }}</p>
-            <p><strong>Deadline:</strong> {{ post.deadline|date:"M d, Y H:i" }}</p>
-            <p>
-                <strong>Status:</strong>
-                <span class="badge {{ post.status_class }}">{{ post.user_status }}</span>
-            </p>
-            {% if post.user_group %}
-            <p><strong>Group:</strong> {{ post.user_group }}</p>
-            {% endif %}
-            <div class="actions">
-                <a class="btn btn-primary" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+        <div class="assignment-cards-grid">
+            {% for post in posts %}
+            <div class="asgn-card">
+                <!-- Course + Status -->
+                <div class="asgn-card__top">
+                    <span class="asgn-card__course-tag">{{ post.course.name|default:"No Course" }}</span>
+                    <span class="badge {{ post.status_class }}">{{ post.user_status }}</span>
+                </div>
+
+                <!-- Title -->
+                <a class="asgn-card__title" href="{% url 'assignment_detail' post.id %}">{{ post.title }}</a>
+
+                <!-- Description -->
+                <p class="asgn-card__desc">{{ post.content|default:"No description provided."|truncatewords:20 }}</p>
+
+                <!-- Countdown Timer -->
+                <div class="asgn-card__timer js-deadline-widget" data-deadline="{{ post.deadline|date:'c' }}">
+                    <div class="deadline-circle">
+                        <div class="deadline-circle__inner">
+                            <span class="deadline-circle__number" data-deadline-number>--</span>
+                            <span class="deadline-circle__label" data-deadline-label>Days left</span>
+                        </div>
+                    </div>
+                    <span class="deadline-circle__subtext" data-deadline-inline>Calculating…</span>
+                </div>
+
+                <!-- Footer: deadline + instructor + action -->
+                <div class="asgn-card__footer">
+                    <div class="asgn-card__meta">
+                        <span class="asgn-card__deadline-text">&#128197; {{ post.deadline|date:"M d, Y H:i" }}</span>
+                        <span class="text-muted">{{ post.author.get_full_name|default:post.author.username }}</span>
+                        {% if post.user_group %}
+                        <span class="text-muted">{{ post.user_group }}</span>
+                        {% endif %}
+                    </div>
+                    <a class="btn btn-primary btn-sm" href="{% url 'assignment_detail' post.id %}">View / Submit</a>
+                </div>
             </div>
+            {% empty %}
+            <p class="empty-state">No assignments found.</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="empty-state">No assignments found.</p>
-        {% endfor %}
     </div>
 
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var widgets = document.querySelectorAll('.js-deadline-widget');
+    if (!widgets.length) return;
+
+    function updateWidget(widget) {
+        var iso = widget.getAttribute('data-deadline');
+        var deadline = new Date(iso);
+        if (!iso || isNaN(deadline.getTime())) return;
+
+        var numEl    = widget.querySelector('[data-deadline-number]');
+        var labelEl  = widget.querySelector('[data-deadline-label]');
+        var inlineEl = widget.querySelector('[data-deadline-inline]');
+
+        var now    = new Date();
+        var diffMs = deadline - now;
+
+        // Remove all urgency classes
+        widget.classList.remove('is-closed', 'is-warning', 'is-urgent');
+
+        if (diffMs <= 0) {
+            widget.classList.add('is-closed');
+            if (numEl)    numEl.textContent   = 'Closed';
+            if (labelEl)  labelEl.textContent  = '';
+            if (inlineEl) inlineEl.textContent = 'Deadline has passed';
+            return;
+        }
+
+        var totalSeconds = Math.floor(diffMs / 1000);
+        var days    = Math.floor(totalSeconds / 86400);
+        var hours   = Math.floor((totalSeconds % 86400) / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        // Apply urgency classes
+        if (totalSeconds < 86400) {
+            widget.classList.add('is-urgent');       // < 24 hours
+        } else if (days < 3) {
+            widget.classList.add('is-warning');      // < 3 days
+        }
+
+        if (days > 0) {
+            if (numEl)   numEl.textContent  = String(days);
+            if (labelEl) labelEl.textContent = days === 1 ? 'Day left' : 'Days left';
+        } else if (hours > 0) {
+            if (numEl)   numEl.textContent  = String(hours);
+            if (labelEl) labelEl.textContent = hours === 1 ? 'Hour left' : 'Hours left';
+        } else {
+            if (numEl)   numEl.textContent  = String(Math.max(minutes, 0));
+            if (labelEl) labelEl.textContent = minutes === 1 ? 'Min left' : 'Mins left';
+        }
+
+        if (inlineEl) inlineEl.textContent = days + 'd ' + hours + 'h ' + minutes + 'm remaining';
+    }
+
+    function tick() {
+        widgets.forEach(updateWidget);
+    }
+
+    tick();
+    setInterval(tick, 60000);
+});
+</script>
 {% endblock %}

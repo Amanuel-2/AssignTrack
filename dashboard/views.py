@@ -52,8 +52,35 @@ def home_view(request):
 
 @login_required
 def dashboard_view(request):
+    if _role(request.user) != "student":
+        return render(request, "dashboard/student_dashboard.html", {"forbidden": True})
+
+    assignments = Post.objects.select_related("course", "author").order_by("deadline")
+    submissions = Submission.objects.filter(student=request.user).select_related("post")
+    joined_groups = Group.objects.filter(members=request.user).select_related("post")
+    enrolled_courses = Course.objects.filter(student=request.user)
     posts = _build_assignment_cards_for_user(request.user)
-    return render(request, "myapp/dashboard.html", {"posts": posts})
+
+    submitted_post_ids = {submission.post_id for submission in submissions}
+    for assignment in assignments:
+        assignment.has_submitted = assignment.id in submitted_post_ids
+
+    upcoming_assignments = [assignment for assignment in assignments if not assignment.is_overdue]
+    overdue_assignments = [assignment for assignment in assignments if assignment.is_overdue]
+    notifications = [
+        f"Assignment '{assignment.title}' is due on {assignment.deadline:%Y-%m-%d %H:%M}"
+        for assignment in upcoming_assignments[:5]
+    ]
+
+    context = {
+        "posts": posts,
+        "enrolled_courses": enrolled_courses,
+        "joined_groups": joined_groups,
+        "upcoming_assignments": upcoming_assignments,
+        "overdue_assignments": overdue_assignments,
+        "notifications": notifications,
+    }
+    return render(request, "dashboard/student_dashboard.html", context)
 
 
 @login_required

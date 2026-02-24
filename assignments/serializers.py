@@ -30,11 +30,18 @@ class SubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Submission
         fields = "__all__"
+        extra_kwargs = {
+            "file": {"required": False, "allow_null": True},
+            "submission_link": {"required": False, "allow_null": True, "allow_blank": True},
+            "supporting_link": {"required": False, "allow_null": True, "allow_blank": True},
+        }
 
     def validate(self, data):
         request = self.context.get("request")
         post = data["post"]
         group = data.get("group")
+        file_value = data.get("file")
+        submission_link = data.get("submission_link")
 
         if not request or not request.user.is_authenticated:
             raise serializers.ValidationError("Authentication is required.")
@@ -52,6 +59,9 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
         if Submission.objects.filter(post=post, student=request.user).exists():
             raise serializers.ValidationError("You already submitted this assignment.")
+
+        if not file_value and not submission_link:
+            raise serializers.ValidationError("Provide at least a file or a submission link.")
 
         if post.group_type in ("manual", "automatic"):
             if group is None:

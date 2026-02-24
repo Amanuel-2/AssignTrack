@@ -53,6 +53,8 @@ class Submission(models.Model):
     group = models.ForeignKey("groups.Group", on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to="submissions/")
+    submission_link = models.URLField(blank=True, null=True)
+    supporting_link = models.URLField(blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -61,4 +63,3 @@ class Submission(models.Model):
 
     def __str__(self):
         return f"{self.student.username} - {self.post.title}"
-

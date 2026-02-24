@@ -10,7 +10,7 @@
     </div>
 
     <div class="section-card">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" data-confirm-submit data-confirm-message="Are you sure you want to submit?">
             {% csrf_token %}
             {{ form.as_p }}
             <div class="actions" style="margin-top: 24px;">

@@ -14,22 +14,23 @@
 
 <body>
 
+    {% with current=request.resolver_match.url_name|default:'' path=request.path %}
     <nav class="nav-bar">
         <div class="nav-left">
             <a class="brand" href="{% url 'home' %}">AssignTrack</a>
-            <a href="{% url 'home' %}">Home</a>
+            <a class="{% if current == 'home' %}is-active{% endif %}" href="{% url 'home' %}">Home</a>
             {% if user.is_authenticated %}
                 {% if user.profile.role == "lecturer" %}
-                    <a href="{% url 'instructor_dashboard' %}">Dashboard</a>
+                    <a class="{% if current == 'instructor_dashboard' or 'assignment_' in current %}is-active{% endif %}" href="{% url 'instructor_dashboard' %}">Dashboard</a>
                 {% elif user.profile.role == "student" %}
-                    <a href="{% url 'dashboard' %}">Dashboard</a>
+                    <a class="{% if current == 'dashboard' or 'assignment_' in current %}is-active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                 {% else %}
-                    <a href="{% url 'dashboard' %}">Dashboard</a>
+                    <a class="{% if current == 'dashboard' or 'assignment_' in current %}is-active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                 {% endif %}
-                <a href="{% url 'profile' %}">Profile</a>
+                <a class="{% if current == 'profile' %}is-active{% endif %}" href="{% url 'profile' %}">Profile</a>
             {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                <a href="{% url 'register' %}">Register</a>
+                <a class="{% if current == 'login' %}is-active{% endif %}" href="{% url 'login' %}">Login</a>
+                <a class="{% if current == 'register' %}is-active{% endif %}" href="{% url 'register' %}">Register</a>
             {% endif %}
         </div>
         {% if user.is_authenticated %}
@@ -39,12 +40,73 @@
         </div>
         {% endif %}
     </nav>
+    {% endwith %}
 
     <main class="page-shell">
         {% block content %}
         {% endblock %}
     </main>
 
+    <div class="confirm-modal" data-confirm-modal hidden>
+        <div class="confirm-modal__backdrop" data-confirm-cancel></div>
+        <div class="confirm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+            <h3 id="confirm-title">Confirm Submission</h3>
+            <p data-confirm-message>Are you sure you want to submit?</p>
+            <div class="confirm-modal__actions">
+                <button type="button" class="btn btn-secondary btn-sm" data-confirm-cancel>No, go back</button>
+                <button type="button" class="btn btn-primary btn-sm" data-confirm-accept>Yes, submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = document.querySelector('[data-confirm-modal]');
+        if (!modal) return;
+        var message = modal.querySelector('[data-confirm-message]');
+        var acceptBtn = modal.querySelector('[data-confirm-accept]');
+        var cancelEls = modal.querySelectorAll('[data-confirm-cancel]');
+        var pendingForm = null;
+
+        function closeModal() {
+            modal.setAttribute('hidden', 'hidden');
+            pendingForm = null;
+        }
+
+        function openModal(form) {
+            pendingForm = form;
+            message.textContent = form.getAttribute('data-confirm-message') || 'Are you sure you want to submit?';
+            modal.removeAttribute('hidden');
+        }
+
+        document.querySelectorAll('form[data-confirm-submit]').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (form.dataset.confirmed === 'true') {
+                    return;
+                }
+                event.preventDefault();
+                openModal(form);
+            });
+        });
+
+        acceptBtn.addEventListener('click', function () {
+            if (!pendingForm) return;
+            pendingForm.dataset.confirmed = 'true';
+            pendingForm.submit();
+            closeModal();
+        });
+
+        cancelEls.forEach(function (el) {
+            el.addEventListener('click', closeModal);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modal.hasAttribute('hidden')) {
+                closeModal();
+            }
+        });
+    });
+    </script>
 </body>
 
 </html>

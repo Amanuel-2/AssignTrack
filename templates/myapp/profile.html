@@ -6,8 +6,20 @@
     <!-- Profile Header Card -->
     <div class="section-card">
         <div class="profile-header">
-            <div class="profile-avatar">
-                {{ user.username|slice:":1"|upper }}
+            <div class="profile-avatar-wrap">
+                {% if user.profile.profile_picture %}
+                <img class="profile-avatar profile-avatar--image" src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }} profile picture">
+                {% else %}
+                <div class="profile-avatar">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                {% endif %}
+                <form class="profile-avatar-upload" method="post" action="{% url 'upload_profile_picture' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <input class="profile-avatar-upload__input" type="file" name="profile_picture" accept="image/*">
+                    <button type="button" class="profile-avatar-upload__button" onclick="this.previousElementSibling.click()">Change</button>
+                </form>
             </div>
             <div class="profile-info">
                 <h2>{{ user.username }}</h2>
@@ -197,4 +209,16 @@
     {% endif %}
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.querySelector('.profile-avatar-upload__input');
+    if (!input) return;
+    input.addEventListener('change', function () {
+        if (input.files && input.files.length) {
+            input.form.submit();
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -3,8 +3,10 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 from accounts.forms import CustomUserCreationForm
+from accounts.models import Profile
 from assignments.models import Post, Submission
 from courses.models import Course
 from groups.models import Group
@@ -84,3 +86,17 @@ def profile_view(request):
         )
 
     return render(request, "myapp/profile.html", context)
+
+
+@login_required
+@require_POST
+def upload_profile_picture_view(request):
+    profile, _ = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={"role": "student"},
+    )
+    image = request.FILES.get("profile_picture")
+    if image:
+        profile.profile_picture = image
+        profile.save(update_fields=["profile_picture"])
+    return redirect(request.POST.get("next") or "dashboard")
