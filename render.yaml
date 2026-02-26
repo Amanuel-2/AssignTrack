@@ -2,8 +2,8 @@ services:
   - type: web
     name: assigntrack
     env: python
-    buildCommand: bash build.sh
-    startCommand: gunicorn config.wsgi:application
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: python -m gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
