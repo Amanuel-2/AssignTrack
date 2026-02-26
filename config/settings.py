@@ -201,6 +201,10 @@ SOCIALACCOUNT_PROVIDERS = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# MongoDB Atlas (secondary datastore)
+MONGODB_URI = os.getenv('MONGODB_URI', '')
+MONGODB_DB_NAME = os.getenv('MONGODB_DB_NAME', 'assigntrack')
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_COOKIE_SECURE = not DEBUG
