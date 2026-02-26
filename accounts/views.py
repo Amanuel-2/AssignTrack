@@ -43,8 +43,12 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
-    role = (request.user.profile.role or "").strip().lower() if hasattr(request.user, "profile") else ""
-    context = {"role": role}
+    profile, _ = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={"role": "student"},
+    )
+    role = (profile.role or "").strip().lower()
+    context = {"role": role, "profile": profile}
 
     if role == "student":
         assignments = Post.objects.select_related("course", "author").order_by("deadline")

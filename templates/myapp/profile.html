@@ -7,8 +7,8 @@
     <div class="section-card">
         <div class="profile-header">
             <div class="profile-avatar-wrap">
-                {% if user.profile.profile_picture %}
-                <img class="profile-avatar profile-avatar--image" src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }} profile picture">
+                {% if profile.profile_picture %}
+                <img class="profile-avatar profile-avatar--image" src="{{ profile.profile_picture.url }}" alt="{{ user.username }} profile picture">
                 {% else %}
                 <div class="profile-avatar">
                     {{ user.username|slice:":1"|upper }}
