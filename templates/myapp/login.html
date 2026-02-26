@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load socialaccount %}
+{% load socialapp_tags %}
 
 {% block content %}
 <div class="auth-wrapper">
@@ -13,12 +14,14 @@
             <button type="submit" class="btn btn-primary">Sign In</button>
         </form>
 
+        {% if request|has_social_app:"google" %}
         <div class="auth-divider">or</div>
 
         <a href="{% provider_login_url 'google' %}" class="google-btn">
             <img src="https://img.icons8.com/color/16/google-logo.png" alt="Google Logo">
             Continue with Google
         </a>
+        {% endif %}
 
         <div class="auth-footer">
             Don't have an account? <a href="{% url 'register' %}">Create one</a>
