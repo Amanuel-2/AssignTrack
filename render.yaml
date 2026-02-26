@@ -19,6 +19,12 @@ services:
         fromDatabase:
           name: assigntrack-db
           property: connectionString
+      - key: MEDIA_ROOT
+        value: /var/data/media
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: assigntrack
 
 databases:
   - name: assigntrack-db

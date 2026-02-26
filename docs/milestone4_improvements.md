@@ -1,109 +1,85 @@
-# Milestone 4 Improvements
+# Milestone 4 Improvements (Updated)
 
-## 1) Course + Instructor Visibility
+This document summarizes the functional improvements delivered around assignment workflow, permissions, and production deployment hardening.
 
-Implemented display of:
-- Course name
-- Instructor name
+## 1. Instructor Assignment Management
 
-Shown on:
-- Dashboard assignment cards
-- Assignment detail page
+Implemented instructor-only controls for:
+- assignment create
+- assignment edit
+- assignment delete
+- assignment review (owner-scoped)
 
-Data source:
-- `Post.course`
-- `Post.author`
+Impact:
+- prevents non-lecturer mutation of assignment records
+- limits instructor management access to owned assignments
 
-Files:
-- `myapp/models.py` (added `Post.course`)
-- `myapp/templates/myapp/dashboard.html`
-- `myapp/templates/myapp/assignment_detail.html`
+## 2. Group Workflow Strengthening
 
----
+Implemented and/or reinforced:
+- automatic group generation for `manual` and `automatic` assignment types
+- group capacity control using `max_students_per_group`
+- student-only join rules
+- duplicate membership guard for same assignment
 
-## 2) Prevent Lecturers from Submitting
+Impact:
+- predictable group provisioning
+- reduced invalid join states
 
-Server-side enforcement:
-- `assignment_detail_view` returns `403` on POST if role is not student.
+## 3. Submission Safety Rules
 
-Template enforcement:
-- Submission form is shown only when student submission is allowed.
+Implemented:
+- one submission per student per assignment (model uniqueness)
+- role guard: non-students cannot submit
+- group-required submission logic for non-individual assignments
 
-Files:
-- `myapp/views.py`
-- `myapp/templates/myapp/assignment_detail.html`
+Impact:
+- cleaner grading/review data
+- reduced duplicate and invalid submissions
 
----
+## 4. Dashboard and Review Visibility
 
-## 3) File Download Fix
+Implemented:
+- instructor dashboard summaries for courses, assignments, submissions, groups
+- student dashboard summaries for upcoming/overdue/submission status
+- assignment review mode separation:
+  - individual assignment review
+  - group assignment review
 
-Download links use:
-- `{{ post.attachment.url }}`
-- `{{ submission.file.url }}`
+Impact:
+- faster operational visibility for both roles
 
-Media config confirmed:
-- `MEDIA_URL = '/media/'`
-- `MEDIA_ROOT = BASE_DIR / 'media'`
+## 5. Authentication and Stability Fixes
 
-Files:
-- `config/settings.py`
-- `myapp/templates/myapp/assignment_detail.html`
+Implemented:
+- profile creation safeguards to reduce missing-profile runtime failures
+- conditional Google login rendering when SocialApp is configured
 
----
+Impact:
+- fewer auth-page 500 errors in production
 
-## 4) Dashboard Sorting Logic
+## 6. Deployment Hardening (Render)
 
-Assignments are sorted by:
-1. Active first (not overdue)
-2. Closest deadline first
-3. Overdue at bottom
+Implemented:
+- dependency pinning including `gunicorn`, `whitenoise`, `dj-database-url`, `psycopg`
+- production static handling with WhiteNoise
+- environment-driven settings for hosts/csrf/security
+- Render blueprint/build workflow support (`render.yaml`, `build.sh`)
 
-Implemented with `Case/When` annotation.
+Impact:
+- reproducible deploys and fewer startup/runtime misconfigurations
 
-File:
-- `myapp/views.py` (`dashboard_view`)
+## 7. Optional MongoDB Integration
 
----
+Implemented:
+- `config/mongodb.py` helper using `pymongo`
+- settings/env placeholders for `MONGODB_URI` and `MONGODB_DB_NAME`
 
-## 5) Status Badges
+Impact:
+- enables secondary document-store use cases without changing Django ORM backend
 
-Status is now rendered as colored badge classes:
-- `submitted` (green)
-- `pending` (orange)
-- `overdue` (red)
+## 8. Follow-up Actions
 
-Files:
-- `myapp/views.py` (sets `status_class`)
-- `myapp/templates/myapp/dashboard.html`
-- `myapp/templates/myapp/assignment_detail.html`
-
----
-
-## 6) Global CSS Styling
-
-Added full UI styling:
-- Card layout
-- Buttons
-- Badges
-- Group containers
-- Disabled states
-- Responsive behavior
-
-Files:
-- `myapp/static/css/style.css`
-- `myapp/templates/base.html` (loads stylesheet)
-
----
-
-## Additional Validations
-
-Kept and/or enforced:
-- No duplicate submissions (`SubmissionSerializer` + model unique constraint)
-- No joining multiple groups per assignment (`join_group_api`)
-- No joining full group (`join_group_api`)
-- No submission without group for manual/automatic (`SubmissionSerializer` + detail-view checks)
-
-Files:
-- `myapp/serializers.py`
-- `myapp/api_views.py`
-- `myapp/views.py`
+- migrate deprecated allauth settings to the current keys
+- standardize naming for mixed API/template routes
+- add automated tests for login/profile and group join edge cases

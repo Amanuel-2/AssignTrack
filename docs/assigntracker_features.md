@@ -1,90 +1,80 @@
-# AssignTracker Feature Documentation
+pip install -r requirements.txt.# AssignTrack Feature Guide
 
-## Instructor-Only HTML CRUD (Template-Based)
+## Assignment Workflows
 
-### Purpose
-Instructors can edit and delete only their own assignments using server-rendered Django pages.
+### Instructor capabilities
 
-### Routes
-- `GET/POST /api/assignments/<post_id>/edit/` : Edit assignment form (instructor + owner only)
-- `GET/POST /api/assignments/<post_id>/delete/` : Delete confirmation (instructor + owner only)
+- Create assignments from dashboard page and API.
+- Edit/delete only assignments they own.
+- Review assignment submissions by individual or by group.
+- Inspect group-level submission detail pages.
 
-### Security Rules
-- User must be authenticated.
-- User profile role must be `lecturer`.
-- Assignment must belong to the logged-in instructor (`post.author == request.user`).
-- Non-instructors or non-owners receive HTTP 403/404 protection.
+### Student capabilities
 
-### Templates
-- `myapp/templates/myapp/assignment_edit.html`
-- `myapp/templates/myapp/assignment_confirm_delete.html`
+- View assignment details and deadline status.
+- Join manual groups (when allowed).
+- Submit assignment files/links.
+- Track upcoming/overdue items in dashboard/profile views.
 
-### Dashboard Integration
-On `dashboard`, assignment cards now show `Edit` and `Delete` links only when:
-- user is instructor
-- and is the author of that assignment
+## Assignment Types
 
----
+- `individual`: one-person submissions
+- `manual`: instructor defines group size; students choose a group
+- `automatic`: groups are generated and students are auto-assigned
 
-## API CRUD (Instructor Ownership)
+Group generation for manual/automatic uses:
 
-### Routes
-- `GET/POST /api/assignments/create/` : List/create assignments
-- `GET/PATCH/PUT/DELETE /api/assignments/manage/<pk>/` : Retrieve/update/delete assignment
+`ceil(total_active_students / max_students_per_group)`
 
-### Ownership Rule
-For write operations, queryset is restricted to instructor-owned posts only.
+## Permission and Ownership Rules
 
----
+- User must be authenticated for protected flows.
+- Lecturer-only actions are guarded by role checks.
+- Assignment edit/delete/review requires lecturer ownership.
+- Group join is student-only and limited to manual assignments.
 
-## Student Group Generation Logic
+## Group Join Validation (`POST /api/groups/<group_id>/join/`)
 
-When an instructor creates an assignment with:
-- `group_type = manual` or `group_type = automatic`
-- `max_students_per_group > 0`
+Validation order:
+- user is authenticated
+- user role is `student`
+- assignment deadline has not passed
+- assignment type is `manual`
+- user is not already in another group for the same assignment
+- target group is not full
 
-the system automatically creates groups based on registered active students:
+Success response includes `member_count`.
 
-`number_of_groups = ceil(total_active_students / max_students_per_group)`
+## Submission Integrity
 
-### Example
-- Active registered students: `15`
-- Max students per group: `5`
-- Created groups: `3`
+- Duplicate submission prevention via model uniqueness (`post`, `student`).
+- Non-students are blocked from posting submissions.
+- For manual/automatic group assignments, students must belong to an eligible group before submitting.
 
-For `manual`:
-- groups are created for students to choose from
+## Dashboard Behavior
 
-For `automatic`:
-- groups are created and students are auto-assigned
+Student dashboard/profile:
+- upcoming assignments
+- overdue assignments
+- joined groups
+- submission status badges
 
----
+Instructor dashboard:
+- owned courses
+- owned assignments
+- submissions for owned assignments
+- groups tied to owned assignments
 
-## Secure Group Join API
+## UI/Template Notes
 
-### Route
-- `POST /api/groups/<group_id>/join/`
+- `templates/base.html`: global nav and layout shell
+- `templates/myapp/`: auth/profile and assignment pages
+- `templates/dashboard/`: student/instructor dashboard pages
+- `templates/assignments/`: review and group submission detail pages
 
-### Validations
-- authenticated user
-- role is `student`
-- assignment group type is `manual`
-- deadline not passed
-- student not already in another group for same assignment
-- group not full
+## Deployment-Related Behavior
 
-### Response
-Success:
-```json
-{
-  "success": "Successfully joined group.",
-  "member_count": 3
-}
-```
-
-Error:
-```json
-{
-  "error": "Group is full."
-}
-```
+- Static files served with WhiteNoise in production.
+- Gunicorn serves `config.wsgi:application`.
+- Database uses `DATABASE_URL` when present.
+- Google provider login link appears only when SocialApp is configured for the current site.

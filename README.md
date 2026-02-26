@@ -1,137 +1,153 @@
 # AssignTrack
 
-AssignTrack is a Django learning management system focused on assignment workflows with role-based access for students and lecturers.
+AssignTrack is a Django-based assignment management platform with role-based workflows for `student` and `lecturer` users.
 
-## Current Stack
+## Overview
 
-- Python + Django
+AssignTrack provides:
+- API endpoints for core resources (`accounts`, `courses`, `assignments`, `groups`)
+- Template-based pages for login, profile, dashboards, assignment detail/review flows
+- Role-aware permissions and ownership checks
+- Render-ready deployment configuration
+
+## Tech Stack
+
+- Python 3.12+
+- Django 6
 - Django REST Framework
 - django-allauth (including Google provider)
-- SQLite (default)
+- WhiteNoise (static files in production)
+- Gunicorn (WSGI server)
+- PostgreSQL (recommended on Render via `DATABASE_URL`)
+- SQLite (local fallback)
+- Optional: MongoDB Atlas via `pymongo`
 
-## Implemented Apps
+## Project Apps
 
-- `accounts`: registration, login/logout, profile, role profile (`student` or `lecturer`)
-- `courses`: course API CRUD endpoints
-- `assignments`: assignment API + template views for detail/edit/delete + submission flow
-- `groups`: group listing and join endpoints for manual group assignments
-- `dashboard`: general dashboard + student/instructor dashboards
+- `accounts`: registration/login/logout/profile and role profile
+- `courses`: course API CRUD
+- `assignments`: assignment API + detail/edit/delete/review template workflows
+- `groups`: group join APIs and group choice page
+- `dashboard`: student/instructor dashboard pages
+- `config`: settings, URL routing, WSGI/ASGI, Mongo helper
 
-## Data Model (Current)
+## Local Development
 
-Core models are split across apps and use legacy-compatible DB table names:
-
-- `accounts.Profile` (`myapp_profile`)
-- `courses.Course` (`myapp_course`)
-- `assignments.Post` (`myapp_post`) for assignments
-- `assignments.Submission` (`myapp_submission`)
-- `groups.Group` (`myapp_group`, M2M table `myapp_group_members`)
-
-## Key Features
-
-- Role-based behavior via profile role checks (`student`, `lecturer`)
-- Instructor assignment creation with support for:
-  - `individual`
-  - `manual` groups
-  - `automatic` groups
-- Auto group generation when creating manual/automatic assignments
-- Student submission workflow with duplicate-submission protection
-- Manual group join constraints:
-  - only students
-  - only before deadline
-  - only one group per assignment
-  - no over-capacity joins
-- Instructor-only assignment edit/delete (owner scoped)
-- Dashboard status/progress indicators and overdue-aware ordering
-
-## URL Map
-
-### Main routes
-
-- `GET /admin/`
-- `GET /api/` API root JSON
-- `GET /dashboard/`
-- `GET /dashboard/student/`
-- `GET /dashboard/instructor/`
-- `GET|POST /dashboard/instructor/assignments/create/`
-
-### Account routes
-
-- `GET|POST /api/accounts/register/`
-- `GET|POST /api/accounts/login/`
-- `GET /api/accounts/logout/`
-- `GET /api/accounts/profile/`
-
-Allauth routes are also mounted at:
-
-- `/accounts/`
-
-### Course API
-
-- `GET|POST /api/courses/`
-- `GET|PUT|PATCH|DELETE /api/courses/<id>/`
-
-### Assignment API + pages
-
-- `GET|POST /api/assignments/`
-- `GET|POST /api/assignments/create/`
-- `GET|PUT|PATCH|DELETE /api/assignments/manage/<id>/`
-- `GET|POST /api/assignments/<post_id>/` (detail + submission page)
-- `GET|POST /api/assignments/<post_id>/edit/`
-- `GET|POST /api/assignments/<post_id>/delete/`
-- `POST /api/assignments/submit/` (API submission)
-
-### Group endpoints
-
-- `GET|POST /api/groups/join/` (list choices + join via payload)
-- `POST /api/groups/<group_id>/join/`
-
-## Permissions (Current Behavior)
-
-- Global DRF default: authenticated users only
-- Lecturers can create/update/delete courses
-- Lecturers can create/manage assignments
-- Students can submit assignments
-- Group joins are restricted to students and manual-group assignments
-
-## Local Setup
-
-1. Create and activate a virtual environment.
-2. Install dependencies.
-3. Run migrations.
-4. Create a superuser (optional).
-5. Start the server.
-
-Example commands:
+### 1) Setup
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-pip install django djangorestframework django-allauth pillow
+pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Open:
+### 2) Open
 
-- App: <http://127.0.0.1:8000/dashboard/>
-- API root: <http://127.0.0.1:8000/api/>
-- Admin: <http://127.0.0.1:8000/admin/>
+- Home: `http://127.0.0.1:8000/`
+- API root: `http://127.0.0.1:8000/api/`
+- Admin: `http://127.0.0.1:8000/admin/`
+- Login: `http://127.0.0.1:8000/api/accounts/login/`
 
-## Media and Static
+## Production Deployment (Render)
 
-- Media uploads are stored in `media/`
-- Static assets are loaded from `static/`
+This repository includes:
+- `build.sh`
+- `render.yaml`
 
-Configured in `config/settings.py` with:
+### Required Render settings
 
-- `MEDIA_URL = '/media/'`
-- `MEDIA_ROOT = BASE_DIR / 'media'`
-- `STATIC_URL = 'static/'`
-- `STATICFILES_DIRS = [BASE_DIR / 'static']`
+- Build Command: `bash build.sh`
+- Start Command: `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`
 
-## Notes
+### Required environment variables
 
-- This repository currently has no `requirements.txt`/`pyproject.toml`; dependency install command above reflects what is used in code.
-- The codebase references legacy `myapp_*` database tables for compatibility.
+- `SECRET_KEY`
+- `DEBUG=False`
+- `ALLOWED_HOSTS` (example: `assigntrack-pcez.onrender.com`)
+- `CSRF_TRUSTED_ORIGINS` (example: `https://assigntrack-pcez.onrender.com`)
+- `DATABASE_URL` (Render PostgreSQL connection string)
+
+### Optional environment variables
+
+- `MONGODB_URI` (MongoDB Atlas URI)
+- `MONGODB_DB_NAME` (default: `assigntrack`)
+
+## Routes (High-Level)
+
+### Core
+
+- `GET /`
+- `GET /admin/`
+- `GET /api/`
+- `GET /dashboard/`
+- `GET /dashboard/instructor/`
+
+### Accounts
+
+- `GET|POST /api/accounts/register/`
+- `GET|POST /api/accounts/login/`
+- `GET /api/accounts/logout/`
+- `GET /api/accounts/profile/`
+- `POST /api/accounts/profile/picture/`
+
+### Courses
+
+- `GET|POST /api/courses/`
+- `GET|PUT|PATCH|DELETE /api/courses/<id>/`
+
+### Assignments
+
+- `GET|POST /api/assignments/`
+- `GET|POST /api/assignments/create/`
+- `GET|PUT|PATCH|DELETE /api/assignments/manage/<id>/`
+- `GET|POST /api/assignments/<post_id>/`
+- `GET|POST /api/assignments/<post_id>/edit/`
+- `GET|POST /api/assignments/<post_id>/delete/`
+- `POST /api/assignments/submit/`
+- `GET /api/assignments/manage/<id>/review/`
+- `GET /api/assignments/manage/<post_id>/groups/<group_id>/`
+
+### Groups
+
+- `GET|POST /api/groups/join/`
+- `POST /api/groups/<group_id>/join/`
+
+## Authentication Notes
+
+- Profile role values are `student` and `lecturer`.
+- Login and profile flows rely on profile records; code now safeguards missing profile creation.
+- Google login button is conditionally rendered only when SocialApp is configured for the current Django site.
+
+## Optional MongoDB Usage
+
+Use `config/mongodb.py`:
+
+```python
+from config.mongodb import get_mongo_db
+
+db = get_mongo_db()
+db.events.insert_one({"event": "example"})
+```
+
+Mongo is secondary storage. Core Django auth/models remain on the relational DB.
+
+## Troubleshooting
+
+### 500 on login page
+
+- Confirm latest commit is deployed.
+- Ensure migrations ran (`bash build.sh` includes migrate).
+- Check Render runtime traceback after reproducing.
+- If using Google login, configure SocialApp in Django admin for your site.
+
+### Static files missing
+
+- Ensure `collectstatic` runs during build.
+- Verify WhiteNoise settings in `config/settings.py`.
+
+## License
+
+Internal/educational project unless otherwise specified.

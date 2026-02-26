@@ -12,6 +12,7 @@ from accounts.permissions import IsLecturer, IsStudent
 from assignments.forms import PostForm, SubmissionForm
 from assignments.models import Post, Submission
 from assignments.serializers import AssignmentSerializer, SubmissionSerializer
+from config.mongodb import log_event
 from courses.models import Course
 from groups.models import Group
 from accounts.models import Profile
@@ -123,7 +124,16 @@ class SubmissionCreateView(generics.CreateAPIView):
     permission_classes = [IsStudent]
 
     def perform_create(self, serializer):
-        serializer.save(student=self.request.user)
+        submission = serializer.save(student=self.request.user)
+        log_event(
+            "submission_created_api",
+            {
+                "submission_id": submission.id,
+                "post_id": submission.post_id,
+                "student_id": self.request.user.id,
+                "filename": submission.file.name if submission.file else None,
+            },
+        )
 
 
 @login_required
@@ -178,6 +188,15 @@ def assignment_detail_view(request, post_id):
                     new_submission.group = user_group
 
                 new_submission.save()
+                log_event(
+                    "submission_created_web",
+                    {
+                        "submission_id": new_submission.id,
+                        "post_id": post.id,
+                        "student_id": user.id,
+                        "filename": new_submission.file.name if new_submission.file else None,
+                    },
+                )
                 return redirect("assignment_detail", post_id=post.id)
     else:
         form = SubmissionForm()

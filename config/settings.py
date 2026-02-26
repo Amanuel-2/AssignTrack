@@ -27,8 +27,8 @@ SECRET_KEY = os.getenv(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-
+# DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = True
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h.strip()]
 
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
@@ -199,7 +199,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "media"))
 
 # MongoDB Atlas (secondary datastore)
 MONGODB_URI = os.getenv('MONGODB_URI', '')

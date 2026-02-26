@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from accounts.forms import CustomUserCreationForm
 from accounts.models import Profile
 from assignments.models import Post, Submission
+from config.mongodb import log_event
 from courses.models import Course
 from groups.models import Group
 
@@ -17,6 +18,10 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            log_event(
+                "signup",
+                {"user_id": user.id, "username": user.username, "email": user.email},
+            )
             login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
             return redirect("profile")
     else:
@@ -30,6 +35,10 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            log_event(
+                "signin",
+                {"user_id": user.id, "username": user.username, "email": user.email},
+            )
             return redirect("profile")
     else:
         form = AuthenticationForm()
@@ -101,4 +110,12 @@ def upload_profile_picture_view(request):
     if image:
         profile.profile_picture = image
         profile.save(update_fields=["profile_picture"])
+        log_event(
+            "profile_picture_uploaded",
+            {
+                "user_id": request.user.id,
+                "username": request.user.username,
+                "filename": image.name,
+            },
+        )
     return redirect(request.POST.get("next") or "dashboard")
