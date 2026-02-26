@@ -20,9 +20,9 @@
             <a class="brand" href="{% url 'home' %}">AssignTrack</a>
             <a class="{% if current == 'home' %}is-active{% endif %}" href="{% url 'home' %}">Home</a>
             {% if user.is_authenticated %}
-                {% if user.profile.role == "lecturer" %}
+                {% if current_user_role == "lecturer" %}
                     <a class="{% if current == 'instructor_dashboard' or 'assignment_' in current %}is-active{% endif %}" href="{% url 'instructor_dashboard' %}">Dashboard</a>
-                {% elif user.profile.role == "student" %}
+                {% elif current_user_role == "student" %}
                     <a class="{% if current == 'dashboard' or 'assignment_' in current %}is-active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                 {% else %}
                     <a class="{% if current == 'dashboard' or 'assignment_' in current %}is-active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
@@ -110,3 +110,4 @@
 </body>
 
 </html>
+
