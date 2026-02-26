@@ -41,6 +41,9 @@ def _ensure_demo_cs_courses(lecturer):
 def _create_groups_for_post(post):
     if post.group_type not in ["manual", "automatic"]:
         return
+    if post.group_type == "manual" and not post.max_students_per_group:
+        Group.objects.get_or_create(post=post, name="Group 1")
+        return
     if not post.max_students_per_group or post.max_students_per_group <= 0:
         return
 
@@ -139,6 +142,10 @@ def assignment_detail_view(request, post_id):
         submit_error = "Only students can submit assignments."
 
     if post.group_type == "manual":
+        if not post.groups.exists():
+            _create_groups_for_post(post)
+            if not post.groups.exists():
+                Group.objects.get_or_create(post=post, name="Group 1")
         groups = post.groups.prefetch_related("members").all()
         if user_role == "student" and user_group is None:
             can_submit = False
